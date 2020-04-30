@@ -23,7 +23,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
 ## First-Look
 
-![alt text](https://gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-list/-/blob/master/preview.gif "Preview")
+![alt text](https://gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-list/-/blob/master/preview.gif)
 
 ## Install the Polymer-CLI
 
