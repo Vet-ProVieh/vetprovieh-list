@@ -41,7 +41,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
     }
   </style>
-  <div class="control">
+  <div id="searchControl" class="control">
     <input id="search" class="input" type="text" placeholder="Bitte Suchbegriff eingeben">
   </div>
   <div id="listElements" style="margin-top:20px;">
@@ -169,11 +169,14 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * Loading Data from Remote-Server
        */
       _fetchDataFromServer(searchValue = null) {
-        if (!this.pagesize || !this.src) {
+        if (!this.pagesize || !this.src || !this.shadowRoot) {
           return;
         }
 
         var listElement = this;
+        var searchControl = listElement.shadowRoot.querySelector("#searchControl");
+        searchControl.classList.add("is-loading");
+
         fetch(this.src + "/index.json")
           .then(response => response.json())
           .then(data => {
@@ -195,6 +198,8 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
             listElement._toggleLoading();
             listElement._toggleList();
+
+            searchControl.classList.remove("is-loading");
           });
       }
 
@@ -210,7 +215,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         if (searchValue) {
           VetproviehList.markElement(newListItem, searchValue);
         }
-        
+
         list.appendChild(newListItem);
       }
 
@@ -270,6 +275,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
             mode: 'open'
           }).appendChild(document.importNode(template.content, true));
           this._addSearchFieldListener();
+          this._fetchDataFromServer();
         }
         this._updateRendering();
       }
