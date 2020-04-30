@@ -41,12 +41,17 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
     }
   </style>
+
+  <!-- SearchControl on Top -->
   <div id="searchControl" class="control">
     <input id="search" class="input" type="text" placeholder="Bitte Suchbegriff eingeben">
   </div>
+
+  <!-- Listing Elements here -->
   <div id="listElements" style="margin-top:20px;">
 
   </div>
+  <!-- Loading Box here -->
   <div id="loading" class="is-hidden">
     <div class="content">
       <p class="loading">
@@ -163,16 +168,22 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         });
       }
 
-      /**
-       * Marking Element in Text
-       * @param element
-       * @param input
-       */
-      static markElement(element, input) {
-        if (input != "") {
-          element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
+      connectedCallback() {
+        // Lazy creation of shadowRoot.
+        if (!this.shadowRoot) {
+          this.attachShadow({
+            mode: 'open'
+          }).appendChild(document.importNode(template.content, true));
         }
+
+        this._addSearchFieldListener();
+        this._fetchDataFromServer();
       }
+
+      // -----------------
+      // PRIVATE METHODS
+      // -----------------
+
 
       /**
        * Can component fetch new data?
@@ -200,10 +211,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
             .then(response => response.json())
             .then(data => {
               if (searchValue) {
-                return data.filter((e) => {
-                  let objectAsString = Object.keys(e).map((k) => e[k]).toString();
-                  return objectAsString.indexOf(searchValue) >= 0
-                });
+                return data.filter((e) => VetproviehList.objectToStringDeep(e).indexOf(searchValue) >= 0);
               } else {
                 return data;
               }
@@ -237,6 +245,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
       /**
        * Generate new Item for List which is based on the template
+       * @private
        */
       _generateListItem() {
         var newNode = document.importNode(this._properties.listTemplate, true);
@@ -247,18 +256,20 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
       /**
        * Replacing Placeholders in template from the loaded element
+       * @private
        */
       _replacePlaceholdersInTemplate(div, element) {
         var match = null;
         while (match = div.innerHTML.match(VetproviehList.regexTemplate)) {
-          var attribute = match[1];
-          var value = element[attribute] || "${attribute} not found";
+          var value = VetproviehList.getValueFromObj(element, match[1]);
+          value = value || "${attribute} not found";
           div.innerHTML = div.innerHTML.replace(match[0], value);
         }
       }
 
       /**
        * Toggeling Loading 
+       * @private
        */
       _toggleLoading() {
         this._toggleElement("#searchControl", "is-loading");
@@ -275,6 +286,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       /**
        *  Toggeling a HTML-Element
        * @param id
+       * @private
        */
       _toggleElement(id, cssClass = "is-hidden") {
         var element = this.shadowRoot.querySelector(id);
@@ -285,16 +297,55 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         }
       }
 
-      connectedCallback() {
-        // Lazy creation of shadowRoot.
-        if (!this.shadowRoot) {
-          this.attachShadow({
-            mode: 'open'
-          }).appendChild(document.importNode(template.content, true));
-          this._addSearchFieldListener();
-          this._fetchDataFromServer();
+      // -----------------
+      // CLASS METHODS
+      // -----------------
+
+
+      /**
+       * Getting Value from JSON-Object
+       * @param [object] value
+       * @param [string] key
+       * @return [object]
+       */
+      static getValueFromObj(value, key) {
+        try {
+          var attribute = key.split(".");
+          while (attribute.length > 0) {
+            value = value[attribute.shift()];
+          }
+          return value;
+        } catch (ex) {
+          return null;
         }
       }
+
+      /**
+       * Marking Element in Text
+       * @param element
+       * @param input
+       */
+      static markElement(element, input) {
+        if (input != "") {
+          element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
+        }
+      }
+
+      /**
+       * Object to String
+       * @param [object] obj
+       * @return [string]
+       */
+      static objectToStringDeep(obj) {
+        return Object.keys(obj).map((k) => {
+          if (typeof(obj[k]) == "object") {
+            return VetproviehList.objectToStringDeep(obj[k]);
+          } else {
+            return obj[k];
+          }
+        }).toString()
+      }
+
     }
 
     customElements.define('vetprovieh-list', VetproviehList);

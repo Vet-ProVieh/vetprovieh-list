@@ -1,0 +1,52 @@
+[
+    {
+        "id": "1",
+        "name": "Paul Panzer",
+        "address": {
+            "street": "Im Heidewinkel",
+            "streetNumber": "3",
+            "zip": "49393",
+            "city": "Lohne"
+        }
+    },
+    {
+        "id": "2",
+        "name": "Dagobert Duck",
+        "address": {
+            "street": "Gewerbering",
+            "streetNumber": "1",
+            "zip": "49393",
+            "city": "Lohne"
+        }
+    },
+    {
+        "id": "3",
+        "name": "Micky Maus",
+        "address": {
+            "street": "Barbarastraße",
+            "streetNumber": "1",
+            "zip": "49076",
+            "city": "Osnabrück"
+        }
+    },
+    {
+        "id": "4",
+        "name": "Franz Brandtwein",
+        "address": {
+            "street": "Barbarastraße",
+            "streetNumber": "1",
+            "zip": "49076",
+            "city": "Osnabrück"
+        }
+    },
+    {
+        "id": "5",
+        "name": "Max Mustermann",
+        "address": {
+            "street": "Barbarastraße",
+            "streetNumber": "1",
+            "zip": "49076",
+            "city": "Osnabrück"
+        }
+    }
+]
