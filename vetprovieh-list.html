@@ -44,10 +44,10 @@ Listing Elements for different types of Templates. Featuring Bulma.css
   <div class="control">
     <input id="search" class="input" type="text" placeholder="Bitte Suchbegriff eingeben">
   </div>
-  <div id="listElements" class="is-hidden" style="margin-top:20px;">
+  <div id="listElements" style="margin-top:20px;">
 
   </div>
-  <div id="loading">
+  <div id="loading" class="is-hidden">
     <div class="content">
       <p class="loading">
       </p>
@@ -74,7 +74,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
 
       static get observedAttributes() {
-        return ['src', 'pageSize'];
+        return ['src', 'pagesize'];
       }
 
       attributeChangedCallback(name, old, value) {
@@ -92,7 +92,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
          */
         this._properties = {
           endpoint: null,
-          pageSize: 20,
+          pagesize: null,
           listTemplate: "<p>No Template found. Please define one</p>"
         };
 
@@ -109,13 +109,16 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         return this._properties.src;
       }
 
-      get pageSize(){
-        return this._properties.pageSize;
+      get pagesize() {
+        return this._properties.pagesize;
       }
 
-      set pageSize() {
-        if (val !== this.src) {
-          this._properties.src = val;
+      set pagesize(val) {
+        if (val) {
+          val = parseInt(val);
+        }
+        if (val !== this.pagesize) {
+          this._properties.pagesize = val;
           this._fetchDataFromServer();
           this._updateRendering();
         }
@@ -137,19 +140,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * Input in search has Changed
        */
       _addSearchFieldListener() {
-        var root = this;
         this._searchField.addEventListener("keyup", (event) => {
-
-          var list = root.shadowRoot.getElementById("listElements");
-          Array.from(list.children).forEach((child) => {
-            VetproviehList.unmarkElement(child);
-            if(child.innerText.indexOf(event.target.value) >= 0){
-              VetproviehList.markElement(child, event.target.value);
-              child.classList.remove("is-hidden");
-            } else {
-              child.classList.add("is-hidden");
-            }
-          })
+          this._fetchDataFromServer(event.target.value);
+          this._updateRendering();
         });
       }
 
@@ -157,7 +150,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * Unmark all quotes in text
        * @param element
        */
-      static unmarkElement(element){
+      static unmarkElement(element) {
         element.innerHTML = element.innerHTML.split(/<\/{0,1}mark>/).join("");
       }
 
@@ -166,8 +159,8 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * @param element
        * @param input
        */
-      static markElement(element, input){
-        if(input != ""){
+      static markElement(element, input) {
+        if (input != "") {
           element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
         }
       }
@@ -175,19 +168,29 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       /**
        * Loading Data from Remote-Server
        */
-      _fetchDataFromServer() {
+      _fetchDataFromServer(searchValue = null) {
+        if (!this.pagesize || !this.src) {
+          return;
+        }
+
         var listElement = this;
         fetch(this.src + "/index.json")
           .then(response => response.json())
           .then(data => {
-            let toggled = false;
-            for (let i = 0; i < data.length; i++) {
+
+            listElement._toggleLoading();
+            listElement._toggleList();
+
+            if (searchValue) {
+              data = data.filter((e) => {
+                return Object.keys(e).map((k) => e[k]).toString().indexOf(searchValue) >= 0
+              });
+            }
+
+            listElement.shadowRoot.getElementById("listElements").innerHTML = "";
+            for (let i = 0; i < data.length && i < this.pagesize; i++) {
               const element = data[i];
-              listElement._attachToList(element);
-              if (i == 3) {
-                toggled = true;
-                //listElement._toggleList();
-              }
+              listElement._attachToList(element, searchValue);
             }
 
             listElement._toggleLoading();
@@ -198,12 +201,16 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       /**
        * Inserts Element to List
        */
-      _attachToList(element) {
+      _attachToList(element, searchValue) {
         var list = this.shadowRoot.getElementById("listElements");
         var newListItem = this._generateListItem();
 
         this._replacePlaceholdersInTemplate(newListItem, element);
 
+        if (searchValue) {
+          VetproviehList.markElement(newListItem, searchValue);
+        }
+        
         list.appendChild(newListItem);
       }
 
