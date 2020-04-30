@@ -51,6 +51,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
   <div id="listElements" style="margin-top:20px;">
 
   </div>
+  <div id="pager">
+
+  </div>
   <!-- Loading Box here -->
   <div id="loading" class="is-hidden">
     <div class="content">
@@ -102,6 +105,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
           endpoint: null,
           pagesize: null,
           page: 1,
+          maxPage: 1,
           listTemplate: "<p>No Template found. Please define one</p>"
         };
 
@@ -130,6 +134,28 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       get page() {
         return this._properties.page;
+      }
+
+      /** 
+       * @property {int} maxPage
+       */
+      get maxPage() {
+        return this._properties.maxPage;
+      }
+
+      
+      set page(val) {
+        if (val !== this.page) {
+          this._properties.page = val;
+          this._updatePager();
+        }
+      }
+
+      set maxPage(val) {
+        if (val !== this.maxPage) {
+          this._properties.maxPage = val;
+          this._updatePager();
+        }
       }
 
       set pagesize(val) {
@@ -178,12 +204,20 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
         this._addSearchFieldListener();
         this._fetchDataFromServer();
+        this._updatePager();
       }
 
       // -----------------
       // PRIVATE METHODS
       // -----------------
 
+
+      _updatePager() {
+        console.log("pager");
+        if (this.shadowRoot) {
+          this.shadowRoot.querySelector("#pager").textContent = this.page + " / " + this.maxPage;
+        }
+      }
 
       /**
        * Can component fetch new data?
@@ -216,10 +250,16 @@ Listing Elements for different types of Templates. Featuring Bulma.css
                 return data;
               }
             })
+            .then(data => {
+              listElement.maxPage = Math.ceil(data.length / listElement.pagesize);
+              return data;
+            })
             .then(data => data.slice((currentPage - 1) * listElement.pagesize, currentPage * pagesize))
             .then(data => {
+              // Attach to HTML-List
               data.forEach(element => listElement._attachToList(element, searchValue));
 
+              // Toggle Loading & Show List
               listElement._toggleLoading();
               listElement._toggleList();
             });
@@ -338,14 +378,13 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       static objectToStringDeep(obj) {
         return Object.keys(obj).map((k) => {
-          if (typeof(obj[k]) == "object") {
+          if (typeof (obj[k]) == "object") {
             return VetproviehList.objectToStringDeep(obj[k]);
           } else {
             return obj[k];
           }
         }).toString()
       }
-
     }
 
     customElements.define('vetprovieh-list', VetproviehList);
