@@ -23,7 +23,14 @@
     <h3>Basic vetprovieh-list demo</h3>
     <demo-snippet>
       <template>
-        <vetprovieh-list></vetprovieh-list>
+        <vetprovieh-list src="items">
+          <template>
+            <div>
+              <strong>{{id}}</strong>: <span>{{name}}</span> <span>{{unknown}}</span>
+            </div>
+            <hr/>
+          </template>
+        </vetprovieh-list>
       </template>
     </demo-snippet>
   </div>

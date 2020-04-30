@@ -4,13 +4,59 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
 @demo demo/index.html
 -->
+
+
 <template id="vetprovieh-list">
+  <link href="../../bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
   <style>
-     :host {
+    :host {
       display: block;
     }
+
+    #loading {
+      margin-top: 5px;
+    }
+
+    .loading {
+      background-clip: content-box;
+      background-color: rgb(224, 224, 224);
+      height: 20px;
+      padding: 5px;
+      margin: 0px !important;
+      animation-name: example;
+      animation-duration: 4s;
+    }
+
+    @keyframes example {
+      0% {
+        background-color: rgb(224, 224, 224);
+      }
+
+      50% {
+        background-color: rgb(244, 244, 244);
+      }
+
+      100% {
+        background-color: rgb(224, 224, 224);
+      }
+    }
   </style>
-  <h2>Hello <span id="prop1"></span>!</h2>
+  <div class="control">
+    <input class="input" type="text" placeholder="Bitte Suchbegriff eingeben">
+  </div>
+  <div id="listElements" class="is-hidden" style="margin-top:20px;">
+
+  </div>
+  <div id="loading">
+    <div class="content">
+      <p class="loading">
+      </p>
+      <p class="loading">
+      </p>
+      <p class="loading">
+      </p>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -20,11 +66,11 @@ Listing Elements for different types of Templates. Featuring Bulma.css
     // Retrieve template from current script's document owner.
     const doc = document.currentScript.ownerDocument;
     const template = doc.querySelector('template#vetprovieh-list');
-    
+
     class VetproviehList extends HTMLElement {
 
       static get observedAttributes() {
-        return ['prop1'];
+        return ['src'];
       }
 
       attributeChangedCallback(name, old, value) {
@@ -41,21 +87,97 @@ Listing Elements for different types of Templates. Featuring Bulma.css
          * @private
          */
         this._properties = {
-          prop1: 'vetprovieh-list',
+          endpoint: null,
+          listTemplate: "<p>No Template found. Please define one</p>"
         };
+
+        var listTemplate = this.querySelector("template");
+        if(listTemplate) {
+          this._properties.listTemplate = listTemplate.content;
+        }
       }
 
       /** 
-       * @property {string|null} prop1
+       * @property {string|null} src
        */
-      get prop1() {
-        return this._properties.prop1;
+      get src() {
+        return this._properties.src;
       }
 
-      set prop1(val) {
-        if (val !== this.prop1) {
-          this._properties.prop1 = val;
+      set src(val) {
+        if (val !== this.src) {
+          this._properties.src = val;
+          this._fetchDataFromServer();
           this._updateRendering();
+        }
+      }
+
+      /**
+       * Loading Data from Remote-Server
+       */
+      _fetchDataFromServer() {
+        var listElement = this;
+        fetch(this.src + "/index.json")
+          .then(response => response.json())
+          .then(data => {
+            let toggled = false;
+            for (let i = 0; i < data.length; i++) {
+              const element = data[i];
+              listElement._attachToList(element);
+              if(i == 3){
+                toggled = true;
+                //listElement._toggleList();
+              }
+            }
+            
+            listElement._toggleLoading();
+            listElement._toggleList();
+          });
+      }
+
+      /**
+       * Inserts Element to List
+       */
+      _attachToList(element){
+        var list = this.shadowRoot.getElementById("listElements");
+        var newNode = document.importNode(this._properties.listTemplate, true);
+        var div = document.createElement("div");
+        div.appendChild(newNode);
+
+        var match = null;
+        while(match = div.innerHTML.match(/{{([a-zA-Z0-9\.]+)}}/)) {
+          var attribute = match[1];
+          var value = element[attribute] || "${attribute} not settable";
+          div.innerHTML = div.innerHTML.replace(match[0], value);
+        }
+        
+        list.appendChild(div);
+      }
+
+      /**
+       * Toggeling Loading 
+       */
+      _toggleLoading() {
+        this._toggleElement("#loading");
+      }
+
+      /**
+       * Toggeling List 
+       */
+      _toggleList(){
+        this._toggleElement("#listElements");
+      }
+
+      /**
+       *  Toggeling a HTML-Element
+       * @param id
+       */
+      _toggleElement(id){
+        var element = this.shadowRoot.querySelector(id);
+        if(element.classList.contains("is-hidden")){
+          element.classList.remove("is-hidden");
+        } else {
+          element.classList.add("is-hidden");
         }
       }
 
@@ -75,7 +197,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       _updateRendering() {
         // Avoid rendering when not connected.
         if (this.shadowRoot && this.isConnected) {
-          this.shadowRoot.querySelector('#prop1').textContent = this.prop1;
+          // this.shadowRoot.querySelector('#src').textContent = this.src;
         }
       }
     }
