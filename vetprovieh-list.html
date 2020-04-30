@@ -69,6 +69,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
     class VetproviehList extends HTMLElement {
 
+      /**
+       * Regex to fill keys in template
+       */
       static get regexTemplate() {
         return /{{([a-zA-Z0-9\.]+)}}/;
       }
@@ -93,6 +96,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         this._properties = {
           endpoint: null,
           pagesize: null,
+          page: 1,
           listTemplate: "<p>No Template found. Please define one</p>"
         };
 
@@ -109,8 +113,18 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         return this._properties.src;
       }
 
+      /** 
+       * @property {int} pagesize
+       */
       get pagesize() {
         return this._properties.pagesize;
+      }
+
+      /** 
+       * @property {int} page
+       */
+      get page() {
+        return this._properties.page;
       }
 
       set pagesize(val) {
@@ -120,38 +134,33 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         if (val !== this.pagesize) {
           this._properties.pagesize = val;
           this._fetchDataFromServer();
-          this._updateRendering();
         }
-      }
-
-      get _searchField() {
-        return this.shadowRoot.querySelector("#search");
       }
 
       set src(val) {
         if (val !== this.src) {
           this._properties.src = val;
           this._fetchDataFromServer();
-          this._updateRendering();
         }
       }
 
       /**
        * Input in search has Changed
+       * @private
        */
       _addSearchFieldListener() {
-        this._searchField.addEventListener("keyup", (event) => {
-          this._fetchDataFromServer(event.target.value);
-          this._updateRendering();
+        var searchTimer = 0;
+        var value = null;
+        var searchField = this.shadowRoot.querySelector("#search");
+        searchField.addEventListener("keyup", (event) => {
+          if (value != event.target.value) {
+            clearTimeout(searchTimer);
+            value = event.target.value;
+            searchTimer = setTimeout((_) => {
+              this._fetchDataFromServer(value);
+            }, 300);
+          }
         });
-      }
-
-      /**
-       * Unmark all quotes in text
-       * @param element
-       */
-      static unmarkElement(element) {
-        element.innerHTML = element.innerHTML.split(/<\/{0,1}mark>/).join("");
       }
 
       /**
@@ -166,45 +175,52 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
 
       /**
+       * Can component fetch new data?
+       * @private
+       */
+      get _readyToFetch() {
+        return this.pagesize && this.src && this.shadowRoot;
+      }
+
+      /**
        * Loading Data from Remote-Server
+       * @private
        */
       _fetchDataFromServer(searchValue = null) {
-        if (!this.pagesize || !this.src || !this.shadowRoot) {
-          return;
+        if (this._readyToFetch) {
+          var listElement = this;
+          var currentPage = this.page;
+          var pagesize = this.pagesize;
+
+          listElement._toggleLoading();
+          listElement._toggleList();
+          listElement.shadowRoot.getElementById("listElements").innerHTML = "";
+
+          fetch(this.src + "/index.json")
+            .then(response => response.json())
+            .then(data => {
+              if (searchValue) {
+                return data.filter((e) => {
+                  let objectAsString = Object.keys(e).map((k) => e[k]).toString();
+                  return objectAsString.indexOf(searchValue) >= 0
+                });
+              } else {
+                return data;
+              }
+            })
+            .then(data => data.slice((currentPage - 1) * listElement.pagesize, currentPage * pagesize))
+            .then(data => {
+              data.forEach(element => listElement._attachToList(element, searchValue));
+
+              listElement._toggleLoading();
+              listElement._toggleList();
+            });
         }
-
-        var listElement = this;
-        var searchControl = listElement.shadowRoot.querySelector("#searchControl");
-        searchControl.classList.add("is-loading");
-
-        fetch(this.src + "/index.json")
-          .then(response => response.json())
-          .then(data => {
-
-            listElement._toggleLoading();
-            listElement._toggleList();
-
-            if (searchValue) {
-              data = data.filter((e) => {
-                return Object.keys(e).map((k) => e[k]).toString().indexOf(searchValue) >= 0
-              });
-            }
-
-            listElement.shadowRoot.getElementById("listElements").innerHTML = "";
-            for (let i = 0; i < data.length && i < this.pagesize; i++) {
-              const element = data[i];
-              listElement._attachToList(element, searchValue);
-            }
-
-            listElement._toggleLoading();
-            listElement._toggleList();
-
-            searchControl.classList.remove("is-loading");
-          });
       }
 
       /**
        * Inserts Element to List
+       * @private
        */
       _attachToList(element, searchValue) {
         var list = this.shadowRoot.getElementById("listElements");
@@ -245,6 +261,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * Toggeling Loading 
        */
       _toggleLoading() {
+        this._toggleElement("#searchControl", "is-loading");
         this._toggleElement("#loading");
       }
 
@@ -259,12 +276,12 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        *  Toggeling a HTML-Element
        * @param id
        */
-      _toggleElement(id) {
+      _toggleElement(id, cssClass = "is-hidden") {
         var element = this.shadowRoot.querySelector(id);
-        if (element.classList.contains("is-hidden")) {
-          element.classList.remove("is-hidden");
+        if (element.classList.contains(cssClass)) {
+          element.classList.remove(cssClass);
         } else {
-          element.classList.add("is-hidden");
+          element.classList.add(cssClass);
         }
       }
 
@@ -276,17 +293,6 @@ Listing Elements for different types of Templates. Featuring Bulma.css
           }).appendChild(document.importNode(template.content, true));
           this._addSearchFieldListener();
           this._fetchDataFromServer();
-        }
-        this._updateRendering();
-      }
-
-      /**
-       * @private
-       */
-      _updateRendering() {
-        // Avoid rendering when not connected.
-        if (this.shadowRoot && this.isConnected) {
-          // this.shadowRoot.querySelector('#src').textContent = this.src;
         }
       }
     }
