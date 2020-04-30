@@ -69,6 +69,10 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
     class VetproviehList extends HTMLElement {
 
+      static get regexTemplate(){
+        return /{{([a-zA-Z0-9\.]+)}}/;
+      } 
+
       static get observedAttributes() {
         return ['src'];
       }
@@ -92,7 +96,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         };
 
         var listTemplate = this.querySelector("template");
-        if(listTemplate) {
+        if (listTemplate) {
           this._properties.listTemplate = listTemplate.content;
         }
       }
@@ -124,12 +128,12 @@ Listing Elements for different types of Templates. Featuring Bulma.css
             for (let i = 0; i < data.length; i++) {
               const element = data[i];
               listElement._attachToList(element);
-              if(i == 3){
+              if (i == 3) {
                 toggled = true;
                 //listElement._toggleList();
               }
             }
-            
+
             listElement._toggleLoading();
             listElement._toggleList();
           });
@@ -138,20 +142,35 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       /**
        * Inserts Element to List
        */
-      _attachToList(element){
+      _attachToList(element) {
         var list = this.shadowRoot.getElementById("listElements");
+        var newListItem = this._generateListItem();
+
+        this._replacePlaceholdersInTemplate(newListItem, element);
+
+        list.appendChild(newListItem);
+      }
+
+      /**
+       * Generate new Item for List which is based on the template
+       */
+      _generateListItem() {
         var newNode = document.importNode(this._properties.listTemplate, true);
         var div = document.createElement("div");
         div.appendChild(newNode);
+        return div;
+      }
 
+      /**
+       * Replacing Placeholders in template from the loaded element
+       */
+      _replacePlaceholdersInTemplate(div, element) {
         var match = null;
-        while(match = div.innerHTML.match(/{{([a-zA-Z0-9\.]+)}}/)) {
+        while (match = div.innerHTML.match(VetproviehList.regexTemplate)) {
           var attribute = match[1];
-          var value = element[attribute] || "${attribute} not settable";
+          var value = element[attribute] || "${attribute} not found";
           div.innerHTML = div.innerHTML.replace(match[0], value);
         }
-        
-        list.appendChild(div);
       }
 
       /**
@@ -164,7 +183,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       /**
        * Toggeling List 
        */
-      _toggleList(){
+      _toggleList() {
         this._toggleElement("#listElements");
       }
 
@@ -172,9 +191,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        *  Toggeling a HTML-Element
        * @param id
        */
-      _toggleElement(id){
+      _toggleElement(id) {
         var element = this.shadowRoot.querySelector(id);
-        if(element.classList.contains("is-hidden")){
+        if (element.classList.contains("is-hidden")) {
           element.classList.remove("is-hidden");
         } else {
           element.classList.add("is-hidden");
