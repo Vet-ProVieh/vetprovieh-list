@@ -21,6 +21,10 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 <vetprovieh-list></vetprovieh-list>
 ```
 
+## First-Look
+
+![alt text](https://gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-list/-/blob/master/preview.gif "Preview")
+
 ## Install the Polymer-CLI
 
 First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your element locally.
