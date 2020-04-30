@@ -74,7 +74,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
 
       static get observedAttributes() {
-        return ['src'];
+        return ['src', 'pageSize'];
       }
 
       attributeChangedCallback(name, old, value) {
@@ -92,6 +92,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
          */
         this._properties = {
           endpoint: null,
+          pageSize: 20,
           listTemplate: "<p>No Template found. Please define one</p>"
         };
 
@@ -106,6 +107,18 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       get src() {
         return this._properties.src;
+      }
+
+      get pageSize(){
+        return this._properties.pageSize;
+      }
+
+      set pageSize() {
+        if (val !== this.src) {
+          this._properties.src = val;
+          this._fetchDataFromServer();
+          this._updateRendering();
+        }
       }
 
       get _searchField() {
@@ -126,19 +139,37 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       _addSearchFieldListener() {
         var root = this;
         this._searchField.addEventListener("keyup", (event) => {
-          var empty = event.target.value == "";
 
           var list = root.shadowRoot.getElementById("listElements");
           Array.from(list.children).forEach((child) => {
-            child.innerHTML = child.innerHTML.split(/<\/{0,1}mark>/).join("");
+            VetproviehList.unmarkElement(child);
             if(child.innerText.indexOf(event.target.value) >= 0){
-              if(!empty) child.innerHTML = child.innerHTML.split(event.target.value).join("<mark>" + event.target.value + "</mark>");
+              VetproviehList.markElement(child, event.target.value);
               child.classList.remove("is-hidden");
             } else {
               child.classList.add("is-hidden");
             }
           })
         });
+      }
+
+      /**
+       * Unmark all quotes in text
+       * @param element
+       */
+      static unmarkElement(element){
+        element.innerHTML = element.innerHTML.split(/<\/{0,1}mark>/).join("");
+      }
+
+      /**
+       * Marking Element in Text
+       * @param element
+       * @param input
+       */
+      static markElement(element, input){
+        if(input != ""){
+          element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
+        }
       }
 
       /**
