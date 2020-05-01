@@ -12,34 +12,6 @@ Listing Elements for different types of Templates. Featuring Bulma.css
     :host {
       display: block;
     }
-
-    #loading {
-      margin-top: 5px;
-    }
-
-    .loading {
-      background-clip: content-box;
-      background-color: rgb(224, 224, 224);
-      height: 20px;
-      padding: 5px;
-      margin: 0px !important;
-      animation-name: example;
-      animation-duration: 4s;
-    }
-
-    @keyframes example {
-      0% {
-        background-color: rgb(224, 224, 224);
-      }
-
-      50% {
-        background-color: rgb(244, 244, 244);
-      }
-
-      100% {
-        background-color: rgb(224, 224, 224);
-      }
-    }
   </style>
 
   <!-- SearchControl on Top -->
@@ -51,19 +23,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
   <div id="listElements" style="margin-top:20px;">
 
   </div>
+  <!-- Pager for Paging through List-->
   <div id="pager">
 
-  </div>
-  <!-- Loading Box here -->
-  <div id="loading" class="is-hidden">
-    <div class="content">
-      <p class="loading">
-      </p>
-      <p class="loading">
-      </p>
-      <p class="loading">
-      </p>
-    </div>
   </div>
 </template>
 
@@ -143,7 +105,6 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         return this._properties.maxPage;
       }
 
-      
       set page(val) {
         if (val !== this.page) {
           this._properties.page = val;
@@ -175,6 +136,36 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         }
       }
 
+      connectedCallback() {
+        // Lazy creation of shadowRoot.
+        if (!this.shadowRoot) {
+          this.attachShadow({
+            mode: 'open'
+          }).appendChild(document.importNode(template.content, true));
+        }
+
+        this._addSearchFieldListener();
+        this._fetchDataFromServer();
+        this._updatePager();
+      }
+
+      /**
+       * Attach Data to List
+       * @param [Array] data
+       * @param [string] searchValue
+       * @param [boolean] clear
+       */
+      attachData(data, searchValue, clear=false) {
+        if(clear) {
+          this.shadowRoot.getElementById("listElements").innerHTML = "";
+        }
+        data.forEach(element => this._attachToList(element, searchValue));
+      }
+
+      // -----------------
+      // PRIVATE METHODS
+      // -----------------
+
       /**
        * Input in search has Changed
        * @private
@@ -194,26 +185,10 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         });
       }
 
-      connectedCallback() {
-        // Lazy creation of shadowRoot.
-        if (!this.shadowRoot) {
-          this.attachShadow({
-            mode: 'open'
-          }).appendChild(document.importNode(template.content, true));
-        }
-
-        this._addSearchFieldListener();
-        this._fetchDataFromServer();
-        this._updatePager();
-      }
-
-      // -----------------
-      // PRIVATE METHODS
-      // -----------------
-
-
+      /**
+       * Updating Pager
+       */
       _updatePager() {
-        console.log("pager");
         if (this.shadowRoot) {
           this.shadowRoot.querySelector("#pager").textContent = this.page + " / " + this.maxPage;
         }
@@ -233,37 +208,23 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       _fetchDataFromServer(searchValue = null) {
         if (this._readyToFetch) {
-          var listElement = this;
-          var currentPage = this.page;
-          var pagesize = this.pagesize;
-
-          listElement._toggleLoading();
-          listElement._toggleList();
-          listElement.shadowRoot.getElementById("listElements").innerHTML = "";
+          var self = this;
 
           fetch(this.src + "/index.json")
             .then(response => response.json())
-            .then(data => {
-              if (searchValue) {
-                return data.filter((e) => VetproviehList.objectToStringDeep(e).indexOf(searchValue) >= 0);
-              } else {
-                return data;
-              }
-            })
-            .then(data => {
-              listElement.maxPage = Math.ceil(data.length / listElement.pagesize);
-              return data;
-            })
-            .then(data => data.slice((currentPage - 1) * listElement.pagesize, currentPage * pagesize))
-            .then(data => {
-              // Attach to HTML-List
-              data.forEach(element => listElement._attachToList(element, searchValue));
-
-              // Toggle Loading & Show List
-              listElement._toggleLoading();
-              listElement._toggleList();
-            });
+            .then(data => VetproviehList.search(data, searchValue))
+            .then(data => self._setMaxPage(data.length) || data)
+            .then(data => VetproviehList.filterByPage(data, self.page, self.pagesize))
+            .then(data => self.attachData(data, searchValue, true));
         }
+      }
+
+      /**
+      * Set Max-Page by lenth of data
+      * @param [int] dataLength
+      */
+      _setMaxPage(dataLength) {
+        this.maxPage = Math.ceil(dataLength / this.pagesize);
       }
 
       /**
@@ -274,7 +235,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         var list = this.shadowRoot.getElementById("listElements");
         var newListItem = this._generateListItem();
 
-        this._replacePlaceholdersInTemplate(newListItem, element);
+        VetproviehList.replacePlaceholdersInTemplate(newListItem, element);
 
         if (searchValue) {
           VetproviehList.markElement(newListItem, searchValue);
@@ -292,28 +253,6 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         var div = document.createElement("div");
         div.appendChild(newNode);
         return div;
-      }
-
-      /**
-       * Replacing Placeholders in template from the loaded element
-       * @private
-       */
-      _replacePlaceholdersInTemplate(div, element) {
-        var match = null;
-        while (match = div.innerHTML.match(VetproviehList.regexTemplate)) {
-          var value = VetproviehList.getValueFromObj(element, match[1]);
-          value = value || "${attribute} not found";
-          div.innerHTML = div.innerHTML.replace(match[0], value);
-        }
-      }
-
-      /**
-       * Toggeling Loading 
-       * @private
-       */
-      _toggleLoading() {
-        this._toggleElement("#searchControl", "is-loading");
-        this._toggleElement("#loading");
       }
 
       /**
@@ -384,6 +323,48 @@ Listing Elements for different types of Templates. Featuring Bulma.css
             return obj[k];
           }
         }).toString()
+      }
+
+
+      /**
+       * Replacing Placeholders in template from the loaded element
+       * @param [HTMLElement] div
+       * @param [object] element
+       */
+      static replacePlaceholdersInTemplate(div, element) {
+        var match = null;
+        while (match = div.innerHTML.match(VetproviehList.regexTemplate)) {
+          var value = VetproviehList.getValueFromObj(element, match[1]);
+          value = value || "${attribute} not found";
+          div.innerHTML = div.innerHTML.replace(match[0], value);
+        }
+      }
+
+      /**
+        * Filter Data by Page
+        * @param [Array] data
+        * @param [number] currentPage
+        * @param [number] pageSize
+        * @return [Array]
+        */
+      static filterByPage(data, currentPage, pageSize) {
+        return data.slice(
+          (currentPage - 1) * pageSize,
+          currentPage * pageSize
+        );
+      }
+
+      /**
+       * Search by Value in Array
+       * @param [Array] data
+       * @param [string] searchValue
+      */
+      static search(data, searchValue) {
+        if (searchValue) {
+          return data.filter((e) => VetproviehList.objectToStringDeep(e).indexOf(searchValue) >= 0);
+        } else {
+          return data;
+        }
       }
     }
 
