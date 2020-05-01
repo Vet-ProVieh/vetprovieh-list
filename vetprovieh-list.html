@@ -306,6 +306,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       static markElement(element, input) {
         if (input != "") {
+          // TODO Do not match HTML-Tags! 
           element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
         }
       }
