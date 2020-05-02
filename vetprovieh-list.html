@@ -155,8 +155,8 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * @param [string] searchValue
        * @param [boolean] clear
        */
-      attachData(data, searchValue, clear=false) {
-        if(clear) {
+      attachData(data, searchValue, clear = false) {
+        if (clear) {
           this.shadowRoot.getElementById("listElements").innerHTML = "";
         }
         data.forEach(element => this._attachToList(element, searchValue));
@@ -306,8 +306,15 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       static markElement(element, input) {
         if (input != "") {
-          // TODO Do not match HTML-Tags! 
-          element.innerHTML = element.innerHTML.split(input).join("<mark>" + input + "</mark>");
+          element.childNodes.forEach((n) => {
+            if (n.nodeName === "#text" && n.nodeValue.indexOf(input) >= 0) {
+              n.parentElement.innerHTML = n.data
+                .split(input)
+                .join("<mark>" + input + "</mark>");
+            } else {
+              VetproviehList.markElement(n, input);
+            }
+          })
         }
       }
 
