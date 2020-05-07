@@ -15,8 +15,7 @@
   ],
   "dependencies": {
     "bulma": "jgthms/bulma",
-    "vetprovieh-pager": "Vet-ProVieh/vetprovieh-pager",
-    "fontawesome": "^5.13.0"
+    "vetprovieh-pager": "Vet-ProVieh/vetprovieh-pager"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2",
