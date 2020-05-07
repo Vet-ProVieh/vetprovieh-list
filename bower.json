@@ -13,6 +13,10 @@
     "node_modules",
     "bower_components"
   ],
+  "dependencies": {
+    "bulma": "jgthms/bulma",
+    "vetprovieh-pager": "Vet-ProVieh/vetprovieh-pager"
+  },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2",
     "web-component-tester": "^6",

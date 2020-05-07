@@ -17,9 +17,7 @@
     "test": "polymer test"
   },
   "devDependencies": {
-    "polymer-cli": "^1.0.0"
+    "polymer-cli": "^1.9.11"
   },
-  "dependencies": {
-    "@tomuench/vetprovieh-pager": "0.0.1"
-  }
+  "dependencies": {}
 }
