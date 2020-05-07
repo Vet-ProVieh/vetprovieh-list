@@ -18,5 +18,8 @@
   },
   "devDependencies": {
     "polymer-cli": "^1.0.0"
+  },
+  "dependencies": {
+    "@tomuench/vetprovieh-pager": "0.0.1"
   }
 }

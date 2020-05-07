@@ -24,9 +24,8 @@ Listing Elements for different types of Templates. Featuring Bulma.css
 
   </div>
   <!-- Pager for Paging through List-->
-  <div id="pager">
-
-  </div>
+  <vetprovieh-pager id="pager" page="1" maximum="7">
+  </vetprovieh-pager>
 </template>
 
 <script>
@@ -147,6 +146,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
         this._addSearchFieldListener();
         this._fetchDataFromServer();
         this._updatePager();
+        this._addPagerListener();
       }
 
       /**
@@ -165,6 +165,13 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       // -----------------
       // PRIVATE METHODS
       // -----------------
+
+      _addPagerListener() {
+        this._pager.addEventListener("change", (event) => {
+            this.page = event.target.page;
+            this._fetchDataFromServer();
+        });
+      }
 
       /**
        * Input in search has Changed
@@ -190,8 +197,18 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        */
       _updatePager() {
         if (this.shadowRoot) {
-          this.shadowRoot.querySelector("#pager").textContent = this.page + " / " + this.maxPage;
+          this._pager.page = this.page;
+          this._pager.maximum = this.maxPage;
         }
+      }
+
+      /**
+       * GET Pager Element
+       * @return [VetproviehPager]
+       * @private
+       */
+      get _pager() {
+        return this.shadowRoot.getElementById("pager");
       }
 
       /**
@@ -220,9 +237,9 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
 
       /**
-      * Set Max-Page by lenth of data
-      * @param [int] dataLength
-      */
+       * Set Max-Page by lenth of data
+       * @param [int] dataLength
+       */
       _setMaxPage(dataLength) {
         this.maxPage = Math.ceil(dataLength / this.pagesize);
       }
@@ -349,12 +366,12 @@ Listing Elements for different types of Templates. Featuring Bulma.css
       }
 
       /**
-        * Filter Data by Page
-        * @param [Array] data
-        * @param [number] currentPage
-        * @param [number] pageSize
-        * @return [Array]
-        */
+       * Filter Data by Page
+       * @param [Array] data
+       * @param [number] currentPage
+       * @param [number] pageSize
+       * @return [Array]
+       */
       static filterByPage(data, currentPage, pageSize) {
         return data.slice(
           (currentPage - 1) * pageSize,
@@ -366,7 +383,7 @@ Listing Elements for different types of Templates. Featuring Bulma.css
        * Search by Value in Array
        * @param [Array] data
        * @param [string] searchValue
-      */
+       */
       static search(data, searchValue) {
         if (searchValue) {
           return data.filter((e) => VetproviehList.objectToStringDeep(e).indexOf(searchValue) >= 0);
