@@ -1,10 +1,10 @@
 {
-  "name": "vetprovieh-list",
+  "name": "@tomuench/vetprovieh-list",
   "description": "Listing Elements for different types of Templates. Featuring Bulma.css",
   "author": {
     "name": "Tobias Münch",
     "email": "tobias.muench@hs-osnabrueck.de",
-    "url": "https://github.com/Vet-ProVieh/vetprovieh-pager"
+    "url": "https://github.com/Vet-ProVieh/vetprovieh-list"
   },
   "main": "vetprovieh-list.js",
   "version": "0.0.1",
@@ -13,6 +13,10 @@
     "web-components",
     "webcomponents"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Vet-ProVieh/vetprovieh-list.git"
+  },
   "directories": {
     "test": "test"
   },
