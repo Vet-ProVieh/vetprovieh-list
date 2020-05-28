@@ -26,11 +26,13 @@
     "bulma": "^0.8.2"
   },
   "devDependencies": {
-    "@polymer/polymer": "^3.0.0",
     "@polymer/iron-demo-helpers": "^3.1.0",
+    "@polymer/polymer": "^3.0.0",
     "@polymer/test-fixture": "^4.0.2",
     "@webcomponents/webcomponentsjs": "^2.0.0",
     "chai": "^4.2.0",
+    "eslint": "^7.1.0",
+    "eslint-config-google": "^0.14.0",
     "mocha": "^6.1.4",
     "wct-mocha": "^1.0.1"
   }
