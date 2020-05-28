@@ -1,7 +1,7 @@
 import {VetproviehPager} from "@tomuench/vetprovieh-pager";
 import {ObjectHelper} from "@tomuench/vetprovieh-shared";
 
-class VetproviehList extends HTMLElement {
+export class VetproviehList extends HTMLElement {
 
 
     static get template() {
@@ -10,6 +10,12 @@ class VetproviehList extends HTMLElement {
         <style>
           :host {
             display: block;
+          }
+          #listElements div{
+            cursor: pointer;
+          }
+          #listElements div:hover {
+            background-color: #F0F0F0 !important;
           }
         </style>
       
@@ -35,7 +41,7 @@ class VetproviehList extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['src', 'pagesize'];
+        return ['src', 'pagesize', 'searchable', 'pageable'];
     }
 
     attributeChangedCallback(name, old, value) {
@@ -44,7 +50,7 @@ class VetproviehList extends HTMLElement {
         }
     }
 
-    constructor() {
+    constructor(pListTemplate) {
         super();
 
         /**
@@ -54,14 +60,44 @@ class VetproviehList extends HTMLElement {
         this._properties = {
             endpoint: null,
             pagesize: null,
+            searchable: true,
+            pageable: true,
             page: 1,
             maxPage: 1,
             listTemplate: "<p>No Template found. Please define one</p>"
         };
 
-        var listTemplate = this.querySelector("template");
+        let listTemplate = pListTemplate || this.querySelector("template");
         if (listTemplate) {
             this._properties.listTemplate = listTemplate.content;
+        }
+    }
+
+    /**
+     * @property {string|null} searchable
+     */
+    get searchable() {
+        return this._properties.searchable;
+    }
+
+    set searchable(val) {
+        if (val !== this.searchable) {
+            this._properties.searchable = val === "true" || val === true;
+            this._updateShow("searchControl", this.searchable);
+        }
+    }
+
+    /**
+     * @property {string|null} pageable
+     */
+    get pageable() {
+        return this._properties.pageable;
+    }
+
+    set pageable(val) {
+        if (val !== this.pageable) {
+            this._properties.pageable = val === "true" || val === true;
+            this._updatePager();
         }
     }
 
@@ -151,6 +187,10 @@ class VetproviehList extends HTMLElement {
         data.forEach(element => this._attachToList(element, searchValue));
     }
 
+    search(searchString) {
+        this._fetchDataFromServer(searchString);
+    }
+
     // -----------------
     // PRIVATE METHODS
     // -----------------
@@ -175,10 +215,11 @@ class VetproviehList extends HTMLElement {
                 clearTimeout(searchTimer);
                 value = event.target.value;
                 searchTimer = setTimeout((_) => {
-                    this._fetchDataFromServer(value);
+                    this.search(value);
                 }, 300);
             }
         });
+        this._updateShow("searchControl", this.searchable);
     }
 
     /**
@@ -186,8 +227,26 @@ class VetproviehList extends HTMLElement {
      */
     _updatePager() {
         if (this.shadowRoot) {
+            this._updateShow(this._pager.id, this.pageable);
             this._pager.page = this.page;
             this._pager.maximum = this.maxPage;
+        }
+    }
+
+    /**
+     * Hide Or Show Element
+     * @param {string} id
+     * @param {boolean} show
+     * @private
+     */
+    _updateShow(id, show) {
+        if (this.shadowRoot) {
+            let search = this.shadowRoot.getElementById(id);
+            if (!show) {
+                search.classList.add("is-hidden");
+            } else {
+                search.classList.remove("is-hidden");
+            }
         }
     }
 
@@ -239,7 +298,7 @@ class VetproviehList extends HTMLElement {
      */
     _attachToList(element, searchValue) {
         var list = this.shadowRoot.getElementById("listElements");
-        var newListItem = this._generateListItem();
+        var newListItem = this._generateListItem(element);
 
         VetproviehList.replacePlaceholdersInTemplate(newListItem, element);
 
@@ -254,9 +313,15 @@ class VetproviehList extends HTMLElement {
      * Generate new Item for List which is based on the template
      * @private
      */
-    _generateListItem() {
+    _generateListItem(element) {
         var newNode = document.importNode(this._properties.listTemplate, true);
         var div = document.createElement("div");
+        div.addEventListener('click', (event) => {
+            let selectedEvent = new Event("selected");
+            selectedEvent["data"] = element;
+            this.dispatchEvent(selectedEvent)
+
+        })
         div.appendChild(newNode);
         return div;
     }

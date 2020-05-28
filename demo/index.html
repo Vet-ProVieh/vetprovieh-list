@@ -26,7 +26,7 @@
     <h3>Demo with name list</h3>
     <demo-snippet>
       <template>
-        <vetprovieh-list src="names" pagesize="4">
+        <vetprovieh-list src="names/index.json" pagesize="4">
           <template>
             <div>
               <strong>{{id}}</strong>: <span>{{name}}</span>
@@ -42,7 +42,7 @@
     <h3>Demo with more advanced data</h3>
     <demo-snippet>
       <template>
-        <vetprovieh-list src="people" pagesize="5">
+        <vetprovieh-list src="people/index.json" pagesize="5">
           <template>
             <div>
               <strong>{{id}}: {{name}} ({{address.city}})</strong>

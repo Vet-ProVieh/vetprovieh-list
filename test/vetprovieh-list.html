@@ -15,7 +15,7 @@
 
     <test-fixture id="BasicTestFixture">
       <template>
-        <vetprovieh-list></vetprovieh-list>
+        <vetprovieh-list src="../demo/names/index.json"></vetprovieh-list>
       </template>
     </test-fixture>
 
@@ -28,12 +28,9 @@
     <script>
       suite('vetprovieh-list', function() {
 
-        test('instantiating the element with default properties works', function() {
+        test('should have searchbar and footer', function() {
           var element = fixture('BasicTestFixture');
           assert.equal(element.prop1, 'vetprovieh-list');
-          var elementShadowRoot = element.shadowRoot;
-          var elementHeader = elementShadowRoot.querySelector('h2');
-          assert.equal(elementHeader.textContent, 'Hello vetprovieh-list!');
         });
 
         test('setting a property on the element works', function() {
