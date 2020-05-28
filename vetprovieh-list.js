@@ -1,12 +1,10 @@
 import {VetproviehPager} from "@tomuench/vetprovieh-pager";
-import {ObjectHelper} from "@tomuench/vetprovieh-shared";
+import {ObjectHelper, ViewHelper, VetproviehElement} from "@tomuench/vetprovieh-shared";
 
-export class VetproviehList extends HTMLElement {
-
+export class VetproviehList extends VetproviehElement {
 
     static get template() {
-        return ` 
-      <link href="../node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
+        return super.template + ` 
         <style>
           :host {
             display: block;
@@ -33,21 +31,9 @@ export class VetproviehList extends HTMLElement {
         </vetprovieh-pager>`;
     }
 
-    /**
-     * Regex to fill keys in template
-     */
-    static get regexTemplate() {
-        return /{{([a-zA-Z0-9\.]+)}}/;
-    }
 
     static get observedAttributes() {
         return ['src', 'pagesize', 'searchable', 'pageable'];
-    }
-
-    attributeChangedCallback(name, old, value) {
-        if (old !== value) {
-            this[name] = value;
-        }
     }
 
     constructor(pListTemplate) {
@@ -83,7 +69,7 @@ export class VetproviehList extends HTMLElement {
     set searchable(val) {
         if (val !== this.searchable) {
             this._properties.searchable = val === "true" || val === true;
-            this._updateShow("searchControl", this.searchable);
+            this.updateVisbility("searchControl", this.searchable);
         }
     }
 
@@ -176,9 +162,9 @@ export class VetproviehList extends HTMLElement {
 
     /**
      * Attach Data to List
-     * @param [Array] data
-     * @param [string] searchValue
-     * @param [boolean] clear
+     * @param {Array} data
+     * @param {string} searchValue
+     * @param {boolean} clear
      */
     attachData(data, searchValue, clear = false) {
         if (clear) {
@@ -219,7 +205,7 @@ export class VetproviehList extends HTMLElement {
                 }, 300);
             }
         });
-        this._updateShow("searchControl", this.searchable);
+        this.updateVisbility("searchControl", this.searchable);
     }
 
     /**
@@ -227,32 +213,15 @@ export class VetproviehList extends HTMLElement {
      */
     _updatePager() {
         if (this.shadowRoot) {
-            this._updateShow(this._pager.id, this.pageable);
+            this.updateVisbility(this._pager.id, this.pageable);
             this._pager.page = this.page;
             this._pager.maximum = this.maxPage;
         }
     }
 
     /**
-     * Hide Or Show Element
-     * @param {string} id
-     * @param {boolean} show
-     * @private
-     */
-    _updateShow(id, show) {
-        if (this.shadowRoot) {
-            let search = this.shadowRoot.getElementById(id);
-            if (!show) {
-                search.classList.add("is-hidden");
-            } else {
-                search.classList.remove("is-hidden");
-            }
-        }
-    }
-
-    /**
      * GET Pager Element
-     * @return [VetproviehPager]
+     * @return {VetproviehPager}
      * @private
      */
     get _pager() {
@@ -286,7 +255,7 @@ export class VetproviehList extends HTMLElement {
 
     /**
      * Set Max-Page by lenth of data
-     * @param [int] dataLength
+     * @param {int} dataLength
      */
     _setMaxPage(dataLength) {
         this.maxPage = Math.ceil(dataLength / this.pagesize);
@@ -300,10 +269,10 @@ export class VetproviehList extends HTMLElement {
         var list = this.shadowRoot.getElementById("listElements");
         var newListItem = this._generateListItem(element);
 
-        VetproviehList.replacePlaceholdersInTemplate(newListItem, element);
+        ViewHelper.replacePlaceholdersInTemplate(newListItem, element);
 
         if (searchValue) {
-            VetproviehList.markElement(newListItem, searchValue);
+            ViewHelper.markElement(newListItem, searchValue);
         }
 
         list.appendChild(newListItem);
@@ -326,86 +295,17 @@ export class VetproviehList extends HTMLElement {
         return div;
     }
 
-    /**
-     * Toggeling List
-     */
-    _toggleList() {
-        this._toggleElement("#listElements");
-    }
-
-    /**
-     *  Toggeling a HTML-Element
-     * @param id
-     * @private
-     */
-    _toggleElement(id, cssClass = "is-hidden") {
-        var element = this.shadowRoot.querySelector(id);
-        if (element.classList.contains(cssClass)) {
-            element.classList.remove(cssClass);
-        } else {
-            element.classList.add(cssClass);
-        }
-    }
-
     // -----------------
     // CLASS METHODS
     // -----------------
 
-    /**
-     * Marking Element in Text
-     * @param element
-     * @param input
-     */
-    static markElement(element, input) {
-        if (input != "") {
-            element.childNodes.forEach((n) => {
-                if (n.nodeName === "#text" && n.nodeValue.indexOf(input) >= 0) {
-                    n.parentElement.innerHTML = n.data
-                        .split(input)
-                        .join("<mark>" + input + "</mark>");
-                } else {
-                    VetproviehList.markElement(n, input);
-                }
-            })
-        }
-    }
-
-    /**
-     * Object to String
-     * @param [object] obj
-     * @return [string]
-     */
-    static objectToStringDeep(obj) {
-        return Object.keys(obj).map((k) => {
-            if (typeof (obj[k]) == "object") {
-                return VetproviehList.objectToStringDeep(obj[k]);
-            } else {
-                return obj[k];
-            }
-        }).toString()
-    }
-
-
-    /**
-     * Replacing Placeholders in template from the loaded element
-     * @param [HTMLElement] div
-     * @param [object] element
-     */
-    static replacePlaceholdersInTemplate(div, element) {
-        var match = null;
-        while (match = div.innerHTML.match(VetproviehList.regexTemplate)) {
-            var value = ObjectHelper.get(element, match[1]);
-            value = value || "";
-            div.innerHTML = div.innerHTML.replace(match[0], value);
-        }
-    }
 
     /**
      * Filter Data by Page
-     * @param [Array] data
-     * @param [number] currentPage
-     * @param [number] pageSize
-     * @return [Array]
+     * @param {Array} data
+     * @param {number} currentPage
+     * @param {number} pageSize
+     * @return {Array}
      */
     static filterByPage(data, currentPage, pageSize) {
         return data.slice(
@@ -416,12 +316,12 @@ export class VetproviehList extends HTMLElement {
 
     /**
      * Search by Value in Array
-     * @param [Array] data
-     * @param [string] searchValue
+     * @param {Array} data
+     * @param {string} searchValue
      */
     static search(data, searchValue) {
         if (searchValue) {
-            return data.filter((e) => VetproviehList.objectToStringDeep(e).indexOf(searchValue) >= 0);
+            return data.filter((e) => ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0);
         } else {
             return data;
         }
