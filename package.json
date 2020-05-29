@@ -6,7 +6,8 @@
     "email": "tobias.muench@hs-osnabrueck.de",
     "url": "https://github.com/Vet-ProVieh/vetprovieh-list"
   },
-  "main": "vetprovieh-list.js",
+  "main": "dist/vetprovieh-list.js",
+  "types": "dist/vetprovieh-list.d.ts",
   "version": "0.0.1",
   "license": "MIT",
   "keywords": [
@@ -27,13 +28,16 @@
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.1.0",
-    "@polymer/polymer": "^3.0.0",
-    "@polymer/test-fixture": "^4.0.2",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
-    "chai": "^4.2.0",
+    "@types/jest": "^25.2.3",
+    "@webcomponents/webcomponentsjs": "^2.4.3",
     "eslint": "^7.1.0",
     "eslint-config-google": "^0.14.0",
-    "mocha": "^6.1.4",
-    "wct-mocha": "^1.0.1"
+    "jest": "^26.0.1",
+    "ts-jest": "^26.0.0",
+    "typescript": "^3.9.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --colors --coverage test"
   }
 }
