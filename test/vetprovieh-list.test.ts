@@ -1,4 +1,9 @@
 import { VetproviehList } from "../lib/vetprovieh-list";
+import { enableFetchMocks } from 'jest-fetch-mock'
+import fetch from 'node-fetch';
+
+
+enableFetchMocks();
 
 const template = document.createElement("template");
 template.innerHTML = `<div>
@@ -54,6 +59,18 @@ describe('connectedCallback', function () {
     pager.src = "fixtues/names/index.json";
     pager.pagesize = 20;
 
+   /* fetch.mockResponse(() =>
+        [
+            {
+                "id": "1",
+                "name": "Paul Panzer"
+            },
+        {
+            "id": "2",
+            "name": "Dagobert Duck"
+
+        }])
+*/
     test("should fetch data", () => {
         pager.connectedCallback();
     })
