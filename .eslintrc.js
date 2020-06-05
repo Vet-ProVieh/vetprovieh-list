@@ -5,15 +5,19 @@ module.exports = {
   },
   'extends': [
     'google',
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   'globals': {
     'Atomics': 'readonly',
     'SharedArrayBuffer': 'readonly',
   },
-  'parserOptions': {
-    'ecmaVersion': 11,
-    'sourceType': 'module',
-  },
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
   'rules': {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   },
 };

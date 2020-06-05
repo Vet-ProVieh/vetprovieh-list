@@ -1,5 +1,5 @@
-import {VetproViehPager} from "@tomuench/vetprovieh-pager";
-import {ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-shared";
+import { VetproviehPager} from "@tomuench/vetprovieh-pager";
+import {Indexable, ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-shared";
 
 /**
  * List Element for Vet:Provieh
@@ -57,7 +57,7 @@ export class VetproviehList extends VetproviehElement {
     private _pageable: boolean = true;
     private _page: number = 1;
     private _maxPage: number = 1;
-    private _listTemplate: DocumentFragment = html`<p>No Template found. Please define one</p>`;
+    private _listTemplate: DocumentFragment = new DocumentFragment();
 
     /**
      * Default Constructor
@@ -212,13 +212,14 @@ export class VetproviehList extends VetproviehElement {
 
     /**
      * Attach Data to List
-     * @param {Array} data
-     * @param {string} searchValue
+     * @param {Array<any>} data
+     * @param {string | undefined} searchValue
      * @param {boolean} clear
      */
-    attachData(data, searchValue, clear = false) {
+    attachData(data: any[], searchValue: string | undefined, clear:boolean = false) {
         if (clear) {
-            this.shadowRoot.getElementById('listElements').innerHTML = '';
+            let listElements = this.getByIdFromShadowRoot('listElements') as HTMLElement;
+            listElements.innerHTML = '';
         }
         data.forEach((element) => this._attachToList(element, searchValue));
     }
@@ -241,8 +242,9 @@ export class VetproviehList extends VetproviehElement {
      */
     _addPagerListener() {
         if (this._pager) {
-            this._pager.addEventListener('change', (event) => {
-                this.page = event.target.page;
+            this._pager.addEventListener('change', (event: Event) => {
+                let target = event.target as VetproviehPager;
+                this.page = target.page;
                 this._fetchDataFromServer();
             });
         }
@@ -254,14 +256,15 @@ export class VetproviehList extends VetproviehElement {
      */
     _addSearchFieldListener() {
         if (this.shadowRoot) {
-            let searchTimer = 0;
-            let value = null;
-            const searchField = this.shadowRoot.querySelector('#search');
-            searchField.addEventListener('keyup', (event) => {
-                if (value != event.target.value) {
+            let searchTimer: NodeJS.Timeout;
+            let value:any = null;
+            const searchField = this.getByIdFromShadowRoot('search') as HTMLElement;
+            searchField.addEventListener('keyup', (event:KeyboardEvent) => {
+                const target:HTMLInputElement = event.target as HTMLInputElement;
+                if (value != target.value) {
                     clearTimeout(searchTimer);
-                    value = event.target.value;
-                    searchTimer = setTimeout((_) => {
+                    value = target.value;
+                    searchTimer = setTimeout(() => {
                         this.search(value);
                     }, 300);
                 }
@@ -286,8 +289,8 @@ export class VetproviehList extends VetproviehElement {
      * @return {VetproviehPager}
      * @private
      */
-    get _pager() : VetproViehPager {
-        return this.shadowRoot.getElementById('pager');
+    get _pager() : VetproviehPager {
+        return this.getByIdFromShadowRoot('pager') as VetproviehPager;
     }
 
     /**
@@ -310,8 +313,8 @@ export class VetproviehList extends VetproviehElement {
             fetch(this.src)
                 .then((response) => response.json())
                 .then((data) => VetproviehList.search(data, searchValue))
-                .then((data) => self._setMaxPage(data.length) || data)
-                .then((data) => self._filterByPage(data))
+                .then((data: any[]) => {self._setMaxPage(data.length); return data})
+                .then((data: any[]) => self._filterByPage(data))
                 .then((data) => self.attachData(data, searchValue, true));
         }
     }
@@ -328,13 +331,13 @@ export class VetproviehList extends VetproviehElement {
 
     /**
      * Inserts Element to List
-     * @param {object} element
-     * @param {string} searchValue
+     * @param {any} element
+     * @param {string | undefined} searchValue
      * @private
      */
-    _attachToList(element, searchValue) {
+    _attachToList(element: any, searchValue: string | undefined) {
         if (this.shadowRoot) {
-            const list: HTMLElement | null = this.shadowRoot.getElementById('listElements');
+            const list: HTMLElement = this.getByIdFromShadowRoot('listElements') as HTMLElement;
             const newListItem: HTMLElement = this._generateListItem(element);
 
             ViewHelper.replacePlaceholders(newListItem, element);
@@ -358,7 +361,7 @@ export class VetproviehList extends VetproviehElement {
         const div = document.createElement('div');
         div.addEventListener('click', (event) => {
             const selectedEvent = new Event('selected');
-            selectedEvent['data'] = dataItem;
+            (selectedEvent as Indexable)['data'] = dataItem;
             this.dispatchEvent(selectedEvent);
         });
         div.appendChild(newNode);
