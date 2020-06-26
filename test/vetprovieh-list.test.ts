@@ -1,15 +1,48 @@
-import { VetproviehList } from "../lib/vetprovieh-list";
 import { enableFetchMocks } from 'jest-fetch-mock'
-import fetch from 'node-fetch';
-
-
+import fetch from 'jest-fetch-mock';
 enableFetchMocks();
 
+import { VetproviehList } from "../lib/vetprovieh-list";
+import { VetproviehPager } from '@tomuench/vetprovieh-pager';
+import { Indexable } from '@tomuench/vetprovieh-shared';
+
+
+// Testtemplate
 const template = document.createElement("template");
 template.innerHTML = `<div>
               <strong>{{id}}</strong>: <span>{{name}}</span>
             </div>
             <hr/>`;
+
+// Test-Data for the Tests
+const data = [
+    {
+        "id": "1",
+        "name": "Paul Panzer"
+    },
+    {
+        "id": "2",
+        "name": "Dagobert Duck"
+
+    }];
+
+// Mock Responses
+fetch.mockResponse(JSON.stringify(data));
+
+
+/**
+ * Generating Demo-List
+ */
+const generateList = () => {
+    const list = new VetproviehList(template);
+
+    list.src = "fixtues/names/index.json";
+    list.pagesize = 20;
+    list.connectedCallback();
+
+    return list;
+}
+
 
 describe('constructor', function () {
     test("should init default values", () => {
@@ -55,23 +88,115 @@ describe('pagesize', function () {
 });
 
 describe('connectedCallback', function () {
-    const pager = new VetproviehList(template);
-    pager.src = "fixtues/names/index.json";
-    pager.pagesize = 20;
+    test("should fetch data and render", () => {
+        const list = generateList();
+        const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
 
-   /* fetch.mockResponse(() =>
-        [
-            {
-                "id": "1",
-                "name": "Paul Panzer"
-            },
-        {
-            "id": "2",
-            "name": "Dagobert Duck"
-
-        }])
-*/
-    test("should fetch data", () => {
-        pager.connectedCallback();
+        setTimeout(() => {
+            data.forEach((element) => {
+                let template = "<strong>" + element.id + "</strong>: <span>" + element.name + "</span>";
+                expect(listItems.innerHTML).toMatch(template);
+            });
+        }, 100);
     })
 });
+
+describe('search', () => {
+    const list = generateList();
+    const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
+    const search = list.getByIdFromShadowRoot("searchControl")  as HTMLElement;
+    list.searchable = true;
+    list.connectedCallback();
+    list.search("Dagobert");
+
+    test("searchControl should be visible", () => {
+        expect(search.classList.contains("is-hidden")).toEqual(false);
+    });
+
+    test("searchControl should be hidden", () => {
+        list.searchable = false;
+        expect(list.searchable).toEqual(false);
+        expect(search.classList.contains("is-hidden")).toEqual(true);
+    });
+
+    test("should mark searched data", () => {
+        setTimeout(() => {
+            expect(listItems.innerHTML).toMatch("<mark>Dagobert</mark>");
+        }, 100);
+    });
+
+    test("should show only one item", () => {
+        setTimeout(() => {
+            expect(listItems.innerHTML).toMatch("Dagobert");
+            expect(listItems.innerHTML).not.toMatch("Paul");
+        }, 100);
+    })
+
+    test("test searchField event", () => {
+        const searchField = list.getByIdFromShadowRoot("search")  as HTMLInputElement;
+
+        searchField.value = "Paul";
+        searchField.dispatchEvent(new KeyboardEvent("keyup"));
+
+        setTimeout(() => {
+            expect(listItems.innerHTML).not.toMatch("Dagobert");
+            expect(listItems.innerHTML).toMatch("Paul");
+        }, 600);
+    })
+})
+
+
+describe('page', () => {
+    const list = generateList();
+    const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
+    list.pagesize = 1;
+
+    beforeEach(function() {
+        list.page = 1;
+    });
+    
+
+    test("should set page", () => {
+        expect(list.maxPage).toEqual(2);
+        
+        list.page = 2;
+        expect(list.page).toEqual(2);
+    });
+
+    test("should throw exception if page is greater max", () => {
+        list.page = 3
+        expect(list.page).toEqual(1);
+    });
+
+    test("pageListener should switch page", () => {
+        let pager = list.getByIdFromShadowRoot("pager") as VetproviehPager;
+        pager.page = 2;
+        pager.dispatchEvent(new Event("change"));
+
+        expect(list.page).toEqual(2);
+
+        setTimeout(() => {
+            expect(listItems.innerHTML).toMatch("Dagobert");
+        },300);
+
+    });
+})
+
+
+describe("selectedEvent", () => {
+    const list = generateList();
+    const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
+
+    test("should fire event", () => {
+        let firstItem = listItems.children[0];
+
+        list.addEventListener("selected",(event: Indexable) => {
+            expect(event["data"]).toEqual(data[0]);
+        });
+
+        firstItem.dispatchEvent(new Event("click"));
+
+
+    })
+
+})
