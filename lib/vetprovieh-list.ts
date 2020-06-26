@@ -1,5 +1,8 @@
-import { VetproviehPager } from '@tomuench/vetprovieh-pager';
-import { Indexable, ViewHelper, VetproviehElement, ObjectHelper } from '@tomuench/vetprovieh-shared';
+import {VetproviehPager} from '@tomuench/vetprovieh-pager';
+import {Indexable,
+  ViewHelper,
+  VetproviehElement,
+  ObjectHelper} from '@tomuench/vetprovieh-shared';
 
 /**
  * List Element for Vet:Provieh
@@ -9,7 +12,6 @@ import { Indexable, ViewHelper, VetproviehElement, ObjectHelper } from '@tomuenc
  * @property {string} src
  */
 export class VetproviehList extends VetproviehElement {
-
     private _src = '';
     private _pagesize = 0;
     private _searchable = true;
@@ -24,12 +26,12 @@ export class VetproviehList extends VetproviehElement {
      * @param {HTMLTemplateElement} pListTemplate
      */
     constructor(pListTemplate: HTMLTemplateElement | undefined = undefined) {
-        super();
+      super();
 
-        const listTemplate = pListTemplate || this.querySelector('template');
-        if (listTemplate) {
-            this._listTemplate = listTemplate.content;
-        }
+      const listTemplate = pListTemplate || this.querySelector('template');
+      if (listTemplate) {
+        this._listTemplate = listTemplate.content;
+      }
     }
 
     /**
@@ -37,7 +39,7 @@ export class VetproviehList extends VetproviehElement {
      * @property {string|null} searchable
      */
     get searchable() {
-        return this._searchable;
+      return this._searchable;
     }
 
     /**
@@ -45,10 +47,10 @@ export class VetproviehList extends VetproviehElement {
      * @param {boolean} val
      */
     set searchable(val) {
-        if (val !== this.searchable) {
-            this._searchable = val;
-            super.updateVisibility('searchControl', this.searchable);
-        }
+      if (val !== this.searchable) {
+        this._searchable = val;
+        super.updateVisibility('searchControl', this.searchable);
+      }
     }
 
     /**
@@ -56,7 +58,7 @@ export class VetproviehList extends VetproviehElement {
      * @property {string|null} pageable
      */
     get pageable() {
-        return this._pageable;
+      return this._pageable;
     }
 
     /**
@@ -64,10 +66,10 @@ export class VetproviehList extends VetproviehElement {
      * @param {boolean} val
      */
     set pageable(val) {
-        if (val !== this.pageable) {
-            this._pageable = val;
-            this._updatePager();
-        }
+      if (val !== this.pageable) {
+        this._pageable = val;
+        this._updatePager();
+      }
     }
 
     /**
@@ -76,7 +78,7 @@ export class VetproviehList extends VetproviehElement {
      * @return {string}
      */
     get src() {
-        return this._src;
+      return this._src;
     }
 
     /** *
@@ -84,10 +86,10 @@ export class VetproviehList extends VetproviehElement {
      * @param {string} val
      */
     set src(val) {
-        if (val !== this.src) {
-            this._src = val;
-            this._fetchDataFromServer();
-        }
+      if (val !== this.src) {
+        this._src = val;
+        this._fetchDataFromServer();
+      }
     }
 
     /**
@@ -96,7 +98,7 @@ export class VetproviehList extends VetproviehElement {
      * @return {int}
      */
     get pagesize() {
-        return this._pagesize;
+      return this._pagesize;
     }
 
 
@@ -105,10 +107,10 @@ export class VetproviehList extends VetproviehElement {
      * @param {int} val
      */
     set pagesize(val) {
-        if (val !== this.pagesize) {
-            this._pagesize = val;
-            this._fetchDataFromServer();
-        }
+      if (val !== this.pagesize) {
+        this._pagesize = val;
+        this._fetchDataFromServer();
+      }
     }
 
     /**
@@ -117,7 +119,7 @@ export class VetproviehList extends VetproviehElement {
      * @return {int}
      */
     get page() {
-        return this._page;
+      return this._page;
     }
 
     /**
@@ -125,10 +127,10 @@ export class VetproviehList extends VetproviehElement {
      * @param {int} val
      */
     set page(val) {
-        if (val !== this.page && val <= this.maxPage) {
-            this._page = val;
-            this._updatePager();
-        }
+      if (val !== this.page && val <= this.maxPage) {
+        this._page = val;
+        this._updatePager();
+      }
     }
 
     /**
@@ -136,24 +138,24 @@ export class VetproviehList extends VetproviehElement {
      * @return {int}
      */
     get maxPage() {
-        return this._maxPage;
+      return this._maxPage;
     }
 
     /**
      * Connected Callback
      */
     connectedCallback() {
-        // Lazy creation of shadowRoot.
-        if (!this.shadowRoot) {
-            super.attachShadow({
-                mode: 'open',
-            }).innerHTML = VetproviehList.template;
-        }
+      // Lazy creation of shadowRoot.
+      if (!this.shadowRoot) {
+        super.attachShadow({
+          mode: 'open',
+        }).innerHTML = VetproviehList.template;
+      }
 
-        this._addSearchFieldListener();
-        this._fetchDataFromServer();
-        this._updatePager();
-        this._addPagerListener();
+      this._addSearchFieldListener();
+      this._fetchDataFromServer();
+      this._updatePager();
+      this._addPagerListener();
     }
 
     /**
@@ -163,11 +165,11 @@ export class VetproviehList extends VetproviehElement {
      * @param {boolean} clear
      */
     attachData(data: any[], searchValue: string | undefined, clear = false) {
-        if (clear) {
-            const listElements = this.getByIdFromShadowRoot('listElements') as HTMLElement;
-            listElements.innerHTML = '';
-        }
-        data.forEach((element) => this._attachToList(element, searchValue));
+      if (clear) {
+        const es = this.getByIdFromShadowRoot('listElements') as HTMLElement;
+        es.innerHTML = '';
+      }
+      data.forEach((element) => this._attachToList(element, searchValue));
     }
 
     /**
@@ -175,7 +177,7 @@ export class VetproviehList extends VetproviehElement {
      * @param {string} searchString
      */
     search(searchString: string) {
-        this._fetchDataFromServer(searchString);
+      this._fetchDataFromServer(searchString);
     }
 
     // -----------------
@@ -187,13 +189,13 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _addPagerListener() {
-        if (this._pager) {
-            this._pager.addEventListener('change', (event: Event) => {
-                const target = event.target as VetproviehPager;
-                this.page = target.page;
-                this._fetchDataFromServer();
-            });
-        }
+      if (this._pager) {
+        this._pager.addEventListener('change', (event: Event) => {
+          const target = event.target as VetproviehPager;
+          this.page = target.page;
+          this._fetchDataFromServer();
+        });
+      }
     }
 
     /**
@@ -201,33 +203,33 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _addSearchFieldListener() {
-        if (this.shadowRoot) {
-            let searchTimer: NodeJS.Timeout;
-            let value: any = null;
-            const searchField = this.getByIdFromShadowRoot('search') as HTMLElement;
-            searchField.addEventListener('keyup', (event: KeyboardEvent) => {
-                const target: HTMLInputElement = event.target as HTMLInputElement;
-                if (value != target.value) {
-                    clearTimeout(searchTimer);
-                    value = target.value;
-                    searchTimer = setTimeout(() => {
-                        this.search(value);
-                    }, 300);
-                }
-            });
-            this.updateVisibility('searchControl', this.searchable);
-        }
+      if (this.shadowRoot) {
+        let searchTimer: NodeJS.Timeout;
+        let value: any = null;
+        const searchField = this.getByIdFromShadowRoot('search') as HTMLElement;
+        searchField.addEventListener('keyup', (event: KeyboardEvent) => {
+          const target: HTMLInputElement = event.target as HTMLInputElement;
+          if (value != target.value) {
+            clearTimeout(searchTimer);
+            value = target.value;
+            searchTimer = setTimeout(() => {
+              this.search(value);
+            }, 300);
+          }
+        });
+        this.updateVisibility('searchControl', this.searchable);
+      }
     }
 
     /**
      * Updating Pager
      */
     _updatePager() {
-        if (this.shadowRoot) {
-            this.updateVisibility(this._pager.id, this.pageable);
-            this._pager.page = this.page;
-            this._pager.maximum = this.maxPage;
-        }
+      if (this.shadowRoot) {
+        this.updateVisibility(this._pager.id, this.pageable);
+        this._pager.page = this.page;
+        this._pager.maximum = this.maxPage;
+      }
     }
 
     /**
@@ -236,7 +238,7 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     get _pager(): VetproviehPager {
-        return this.getByIdFromShadowRoot('pager') as VetproviehPager;
+      return this.getByIdFromShadowRoot('pager') as VetproviehPager;
     }
 
     /**
@@ -244,7 +246,7 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     get _readyToFetch() {
-        return this.pagesize && this.src && this.shadowRoot;
+      return this.pagesize && this.src && this.shadowRoot;
     }
 
     /**
@@ -253,18 +255,16 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _fetchDataFromServer(searchValue: string | undefined = undefined) {
-        if (this._readyToFetch) {
-            const self = this;
-
-            fetch(this.src)
-                .then((response) => response.json())
-                .then((data) => VetproviehList.search(data, searchValue))
-                .then((data: any[]) => {
-                    self._setMaxPage(data.length); return data;
-                })
-                .then((data: any[]) => self._filterByPage(data))
-                .then((data) => self.attachData(data, searchValue, true));
-        }
+      if (this._readyToFetch) {
+        fetch(this.src)
+            .then((response) => response.json())
+            .then((data) => VetproviehList.search(data, searchValue))
+            .then((data: any[]) => {
+              this._setMaxPage(data.length); return data;
+            })
+            .then((data: any[]) => this._filterByPage(data))
+            .then((data) => this.attachData(data, searchValue, true));
+      }
     }
 
     /**
@@ -273,8 +273,8 @@ export class VetproviehList extends VetproviehElement {
      * @return {boolean}
      */
     _setMaxPage(dataLength: number) {
-        this._maxPage = Math.ceil(dataLength / this.pagesize);
-        return true;
+      this._maxPage = Math.ceil(dataLength / this.pagesize);
+      return true;
     }
 
     /**
@@ -284,18 +284,18 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _attachToList(element: any, searchValue: string | undefined) {
-        if (this.shadowRoot) {
-            const list: HTMLElement = this.getByIdFromShadowRoot('listElements') as HTMLElement;
-            const newListItem: HTMLElement = this._generateListItem(element);
+      if (this.shadowRoot) {
+        const list = this.getByIdFromShadowRoot('listElements') as HTMLElement;
+        const newListItem: HTMLElement = this._generateListItem(element);
 
-            ViewHelper.replacePlaceholders(newListItem, element);
+        ViewHelper.replacePlaceholders(newListItem, element);
 
-            if (searchValue) {
-                ViewHelper.markElement(newListItem, searchValue);
-            }
-
-            if (list) list.appendChild(newListItem);
+        if (searchValue) {
+          ViewHelper.markElement(newListItem, searchValue);
         }
+
+        if (list) list.appendChild(newListItem);
+      }
     }
 
     /**
@@ -305,15 +305,15 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _generateListItem(dataItem: any) {
-        const newNode = document.importNode(this._listTemplate, true);
-        const div = document.createElement('div');
-        div.addEventListener('click', (event) => {
-            const selectedEvent = new Event('selected');
-            (selectedEvent as Indexable)['data'] = dataItem;
-            this.dispatchEvent(selectedEvent);
-        });
-        div.appendChild(newNode);
-        return div;
+      const newNode = document.importNode(this._listTemplate, true);
+      const div = document.createElement('div');
+      div.addEventListener('click', () => {
+        const selectedEvent = new Event('selected');
+        (selectedEvent as Indexable)['data'] = dataItem;
+        this.dispatchEvent(selectedEvent);
+      });
+      div.appendChild(newNode);
+      return div;
     }
 
     /**
@@ -325,10 +325,10 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     _filterByPage(data: Array<any>) {
-        return data.slice(
-            (this.page - 1) * this.pagesize,
-            this.page * this.pagesize,
-        );
+      return data.slice(
+          (this.page - 1) * this.pagesize,
+          this.page * this.pagesize,
+      );
     }
 
     // -----------------
@@ -343,13 +343,13 @@ export class VetproviehList extends VetproviehElement {
      * @return {Array}
      */
     static search(data: Array<any>, searchValue: string | undefined) {
-        if (searchValue) {
-            return data.filter((e) => {
-                return ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
-            });
-        } else {
-            return data;
-        }
+      if (searchValue) {
+        return data.filter((e) => {
+          return ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
+        });
+      } else {
+        return data;
+      }
     }
 
     /**
@@ -357,7 +357,7 @@ export class VetproviehList extends VetproviehElement {
    * @return {string}
    */
     static get template() {
-        return VetproviehElement.template + ` 
+      return VetproviehElement.template + ` 
     <style>
       :host {
         display: block;
@@ -390,7 +390,7 @@ export class VetproviehList extends VetproviehElement {
        * @return {string[]}
        */
     static get observedAttributes() {
-        return ['src', 'pagesize', 'searchable', 'pageable'];
+      return ['src', 'pagesize', 'searchable', 'pageable'];
     }
 }
 
