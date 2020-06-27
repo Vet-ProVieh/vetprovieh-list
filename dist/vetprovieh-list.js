@@ -1,402 +1,532 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-define("vetprovieh-list", ["require", "exports", "@tomuench/vetprovieh-shared/src"], function (require, exports, src_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.VetproviehList = void 0;
+/**
+ * Helper to get and set Attributes on Objects
+ */
+class ObjectHelper {
     /**
-     * List Element for Vet:Provieh
-     * Reads Data from Webservice an shows it.
-     * @property {boolean} searchable
-     * @property {boolean} pageable
-     * @property {string} src
-     */
-    var VetproviehList = /** @class */ (function (_super) {
-        __extends(VetproviehList, _super);
-        /**
-           * Default Constructor
-           * accepts a template as parameter
-           * @param {HTMLTemplateElement} pListTemplate
-           */
-        function VetproviehList(pListTemplate) {
-            var _this = _super.call(this) || this;
-            /**
-                 * @type {!Object}
-                 * @private
-                 */
-            _this._properties = {
-                endpoint: null,
-                pagesize: null,
-                searchable: true,
-                pageable: true,
-                page: 1,
-                maxPage: 1,
-                listTemplate: '<p>No Template found. Please define one</p>',
-            };
-            var listTemplate = pListTemplate || _this.querySelector('template');
-            if (listTemplate) {
-                _this._properties.listTemplate = listTemplate.content;
-            }
-            return _this;
+       * Getting Value from JSON-Object
+       * @param {Indexable} object
+       * @param {string} key
+       * @return {any}
+       */
+    static get(object, key) {
+        try {
+            const attributes = key.split('.');
+            return this._iterateThrough(object, attributes);
         }
-        Object.defineProperty(VetproviehList, "template", {
-            /**
-               * Getting View Template
-               * @return {string}
-               */
-            get: function () {
-                return src_1.VetproviehElement.template + " \n    <style>\n      :host {\n        display: block;\n      }\n      #listElements div{\n        cursor: pointer;\n      }\n      #listElements div:hover {\n        background-color: #F0F0F0 !important;\n      }\n    </style>\n  \n    <!-- SearchControl on Top -->\n    <div id=\"searchControl\" class=\"control\">\n      <input id=\"search\" class=\"input\" type=\"text\" \n             placeholder=\"Bitte Suchbegriff eingeben\">\n    </div>\n  \n    <!-- Listing Elements here -->\n    <div id=\"listElements\" style=\"margin-top:20px;\">\n  \n    </div>\n    <!-- Pager for Paging through List-->\n    <vetprovieh-pager id=\"pager\" page=\"1\" maximum=\"7\">\n    </vetprovieh-pager>";
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList, "observedAttributes", {
-            /**
-               * Getting observed Attributes
-               * @return {string[]}
-               */
-            get: function () {
-                return ['src', 'pagesize', 'searchable', 'pageable'];
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "searchable", {
-            /**
-             * Getter searchable
-               * @property {string|null} searchable
-               */
-            get: function () {
-                return this._properties.searchable;
-            },
-            /**
-               * Setter Searchable
-               * @param {boolean} val
-               */
-            set: function (val) {
-                if (val !== this.searchable) {
-                    this._properties.searchable = val === 'true' || val === true;
-                    this.updateVisbility('searchControl', this.searchable);
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "pageable", {
-            /**
-             * Getter Pageable
-               * @property {string|null} pageable
-               */
-            get: function () {
-                return this._properties.pageable;
-            },
-            /**
-               * Setter Pageable
-               * @param {boolean} val
-               */
-            set: function (val) {
-                if (val !== this.pageable) {
-                    this._properties.pageable = val === 'true' || val === true;
-                    this._updatePager();
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "src", {
-            /**
-             * Getter src
-               * @property {string|null} src
-             * @return {string}
-               */
-            get: function () {
-                return this._properties.src;
-            },
-            /** *
-               * Setter Src
-               * @param {string} val
-               */
-            set: function (val) {
-                if (val !== this.src) {
-                    this._properties.src = val;
-                    this._fetchDataFromServer();
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "pagesize", {
-            /**
-             * Getter pagesize
-               * @property {int} pagesize
-             * @return {int}
-               */
-            get: function () {
-                return this._properties.pagesize;
-            },
-            /**
-               * Setter Pagesize
-               * @param {int} val
-               */
-            set: function (val) {
-                if (val) {
-                    val = parseInt(val);
-                }
-                if (val !== this.pagesize) {
-                    this._properties.pagesize = val;
-                    this._fetchDataFromServer();
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "page", {
-            /**
-             * Getter CurrentPage
-               * @property {int} page
-             * @return {int}
-               */
-            get: function () {
-                return this._properties.page;
-            },
-            /**
-               * Setter CurrentPage
-               * @param {int} val
-               */
-            set: function (val) {
-                if (val !== this.page) {
-                    this._properties.page = val;
-                    this._updatePager();
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "maxPage", {
-            /**
-             * Getter MaxPage
-               * @property {int} maxPage
-             * @return {int}
-               */
-            get: function () {
-                return this._properties.maxPage;
-            },
-            /**
-               * Setter MaxPage
-               * @param {int} val
-               */
-            set: function (val) {
-                if (val !== this.maxPage) {
-                    this._properties.maxPage = val;
-                    this._updatePager();
-                }
-            },
-            enumerable: false,
-            configurable: true
-        });
-        /**
-           * Connected Callback
-           */
-        VetproviehList.prototype.connectedCallback = function () {
-            // Lazy creation of shadowRoot.
-            if (!this.shadowRoot) {
-                this.attachShadow({
-                    mode: 'open',
-                }).innerHTML = VetproviehList.template;
+        catch (ex) {
+            return undefined;
+        }
+    }
+    /**
+       * Iterating Through Object
+       * @param {Indexable} obj
+       * @param {string[]} attributes
+       * @param {number} depth
+       * @return {any}
+       * @private
+       */
+    static _iterateThrough(obj, attributes, depth = 0) {
+        if (depth < 0)
+            return undefined;
+        while (attributes.length > depth) {
+            const attribute = attributes.shift();
+            if (!obj)
+                throw new Error('Unknown Key');
+            obj = obj[attribute];
+        }
+        return obj;
+    }
+    /**
+       * Setting value for Object
+       * @param {Indexable} object
+       * @param {string} key
+       * @param {any} value
+       */
+    static set(object, key, value) {
+        const attributes = key.split('.');
+        object = this._iterateThrough(object, attributes, 1);
+        const property = attributes[0];
+        object[property] = value;
+    }
+    /**
+       * Object to String
+       * @param {Object} obj
+       * @return {string}
+       */
+    static objectToStringDeep(obj) {
+        if (!obj)
+            return '';
+        return Object.keys(obj).map((k) => {
+            const value = obj[k];
+            if (typeof (value) == 'object') {
+                return ObjectHelper.objectToStringDeep(value);
             }
-            this._addSearchFieldListener();
-            this._fetchDataFromServer();
-            this._updatePager();
-            this._addPagerListener();
-        };
-        /**
-           * Attach Data to List
-           * @param {Array} data
-           * @param {string} searchValue
-           * @param {boolean} clear
-           */
-        VetproviehList.prototype.attachData = function (data, searchValue, clear) {
-            var _this = this;
-            if (clear === void 0) { clear = false; }
-            if (clear) {
-                this.shadowRoot.getElementById('listElements').innerHTML = '';
+            else {
+                return value;
             }
-            data.forEach(function (element) { return _this._attachToList(element, searchValue); });
-        };
-        /**
-           * Search for a string
-           * @param {string} searchString
-           */
-        VetproviehList.prototype.search = function (searchString) {
-            this._fetchDataFromServer(searchString);
-        };
-        // -----------------
-        // PRIVATE METHODS
-        // -----------------
-        /**
-           * Adding PageListener
-           * @private
-           */
-        VetproviehList.prototype._addPagerListener = function () {
-            var _this = this;
-            this._pager.addEventListener('change', function (event) {
-                _this.page = event.target.page;
-                _this._fetchDataFromServer();
+        }).toString();
+    }
+}
+
+/**
+ * Helpers for View
+ */
+class ViewHelper {
+    /**
+       * Mark text yellow inside an element.
+       * @param {Node} element
+       * @param {string} input
+       */
+    static markElement(element, input) {
+        if (input != '') {
+            element.childNodes.forEach((n) => {
+                const value = n.nodeValue || '';
+                if (n.nodeName === '#text' && value.indexOf(input) >= 0) {
+                    element.innerHTML = n['data']
+                        .split(input)
+                        .join('<mark>' + input + '</mark>');
+                }
+                else {
+                    ViewHelper.markElement(n, input);
+                }
             });
-        };
-        /**
-           * Input in search has Changed
-           * @private
-           */
-        VetproviehList.prototype._addSearchFieldListener = function () {
-            var _this = this;
-            var searchTimer = 0;
-            var value = null;
-            var searchField = this.shadowRoot.querySelector('#search');
-            searchField.addEventListener('keyup', function (event) {
-                if (value != event.target.value) {
+        }
+    }
+    /**
+       * Regex to fill keys in template
+       * @return {RegExp}
+       */
+    static get regexTemplate() {
+        return /{{([a-zA-Z0-9\.]+)}}/;
+    }
+    /**
+       * Replacing Placeholders in template from the loaded element
+       * @param {HTMLElement} template
+       * @param {Indexable} e
+       */
+    static replacePlaceholders(template, e) {
+        let match = null;
+        while (match = template.innerHTML.match(ViewHelper.regexTemplate)) {
+            let value = ObjectHelper.get(e, match[1]);
+            value = value || '';
+            template.innerHTML = template.innerHTML.replace(match[0], value);
+        }
+    }
+}
+
+/**
+ * BaseClass for view Elements
+ */
+class VetproviehElement extends HTMLElement {
+    /**
+       * Callback Implementation
+       * @param {string} name
+       * @param {any} old
+       * @param {any} value
+       */
+    attributeChangedCallback(name, old, value) {
+        if (old !== value) {
+            this[name] = value;
+        }
+    }
+    /**
+     * Loading HTML-Element From ShadowRoot
+     * @param {string} id
+     * @return {HTMLElement | undefined}
+     */
+    getByIdFromShadowRoot(id) {
+        if (this.shadowRoot) {
+            return this.shadowRoot.getElementById(id);
+        }
+    }
+    /**
+       * Hide Or Show Element
+       * @param {string} id
+       * @param {boolean} show
+       */
+    updateVisibility(id, show) {
+        const search = this.getByIdFromShadowRoot(id);
+        if (search) {
+            if (!show) {
+                search.classList.add('is-hidden');
+            }
+            else {
+                search.classList.remove('is-hidden');
+            }
+        }
+    }
+    // -----------------
+    // CLASS METHODS
+    // -----------------
+    /**
+       * Getting Template
+       * @return {string}
+       */
+    static get template() {
+        return `<link href="../node_modules/bulma/css/bulma.min.css" 
+                  rel="stylesheet" type="text/css">`;
+    }
+}
+
+/**
+ * List Element for Vet:Provieh
+ * Reads Data from Webservice an shows it.
+ * @property {boolean} searchable
+ * @property {boolean} pageable
+ * @property {string} src
+ */
+class VetproviehList extends VetproviehElement {
+    /**
+     * Default Constructor
+     * accepts a template as parameter
+     * @param {HTMLTemplateElement} pListTemplate
+     */
+    constructor(pListTemplate) {
+        super();
+        this._src = "";
+        this._pagesize = 0;
+        this._searchable = true;
+        this._pageable = true;
+        this._page = 1;
+        this._maxPage = 1;
+        const listTemplate = pListTemplate || this.querySelector('template');
+        if (listTemplate) {
+            this._listTemplate = listTemplate.content;
+        }
+    }
+    /**
+     * Getting View Template
+     * @return {string}
+     */
+    static get template() {
+        return VetproviehElement.template + ` 
+    <style>
+      :host {
+        display: block;
+      }
+      #listElements div{
+        cursor: pointer;
+      }
+      #listElements div:hover {
+        background-color: #F0F0F0 !important;
+      }
+    </style>
+  
+    <!-- SearchControl on Top -->
+    <div id="searchControl" class="control">
+      <input id="search" class="input" type="text" 
+             placeholder="Bitte Suchbegriff eingeben">
+    </div>
+  
+    <!-- Listing Elements here -->
+    <div id="listElements" style="margin-top:20px;">
+  
+    </div>
+    <!-- Pager for Paging through List-->
+    <vetprovieh-pager id="pager" page="1" maximum="7">
+    </vetprovieh-pager>`;
+    }
+    /**
+     * Getting observed Attributes
+     * @return {string[]}
+     */
+    static get observedAttributes() {
+        return ['src', 'pagesize', 'searchable', 'pageable'];
+    }
+    /**
+     * Getter searchable
+     * @property {string|null} searchable
+     */
+    get searchable() {
+        return this._searchable;
+    }
+    /**
+     * Setter Searchable
+     * @param {boolean} val
+     */
+    set searchable(val) {
+        if (val !== this.searchable) {
+            this._searchable = val;
+            super.updateVisibility('searchControl', this.searchable);
+        }
+    }
+    /**
+     * Getter Pageable
+     * @property {string|null} pageable
+     */
+    get pageable() {
+        return this._pageable;
+    }
+    /**
+     * Setter Pageable
+     * @param {boolean} val
+     */
+    set pageable(val) {
+        if (val !== this.pageable) {
+            this._pageable = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Getter src
+     * @property {string|null} src
+     * @return {string}
+     */
+    get src() {
+        return this._src;
+    }
+    /** *
+     * Setter Src
+     * @param {string} val
+     */
+    set src(val) {
+        if (val !== this.src) {
+            this._src = val;
+            this._fetchDataFromServer();
+        }
+    }
+    /**
+     * Getter pagesize
+     * @property {int} pagesize
+     * @return {int}
+     */
+    get pagesize() {
+        return this._pagesize;
+    }
+    /**
+     * Setter Pagesize
+     * @param {int} val
+     */
+    set pagesize(val) {
+        if (val !== this.pagesize) {
+            this._pagesize = val;
+            this._fetchDataFromServer();
+        }
+    }
+    /**
+     * Getter CurrentPage
+     * @property {int} page
+     * @return {int}
+     */
+    get page() {
+        return this._page;
+    }
+    /**
+     * Setter CurrentPage
+     * @param {int} val
+     */
+    set page(val) {
+        if (val !== this.page) {
+            this._page = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Getter MaxPage
+     * @property {int} maxPage
+     * @return {int}
+     */
+    get maxPage() {
+        return this._maxPage;
+    }
+    /**
+     * Setter MaxPage
+     * @param {int} val
+     */
+    set maxPage(val) {
+        if (val !== this.maxPage) {
+            this._maxPage = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Connected Callback
+     */
+    connectedCallback() {
+        // Lazy creation of shadowRoot.
+        if (!this.shadowRoot) {
+            super.attachShadow({
+                mode: 'open',
+            }).innerHTML = VetproviehList.template;
+        }
+        this._addSearchFieldListener();
+        this._fetchDataFromServer();
+        this._updatePager();
+        this._addPagerListener();
+    }
+    /**
+     * Attach Data to List
+     * @param {Array} data
+     * @param {string} searchValue
+     * @param {boolean} clear
+     */
+    attachData(data, searchValue, clear = false) {
+        if (clear) {
+            this.shadowRoot.getElementById('listElements').innerHTML = '';
+        }
+        data.forEach((element) => this._attachToList(element, searchValue));
+    }
+    /**
+     * Search for a string
+     * @param {string} searchString
+     */
+    search(searchString) {
+        this._fetchDataFromServer(searchString);
+    }
+    // -----------------
+    // PRIVATE METHODS
+    // -----------------
+    /**
+     * Adding PageListener
+     * @private
+     */
+    _addPagerListener() {
+        if (this._pager) {
+            this._pager.addEventListener('change', (event) => {
+                this.page = event.target.page;
+                this._fetchDataFromServer();
+            });
+        }
+    }
+    /**
+     * Input in search has Changed
+     * @private
+     */
+    _addSearchFieldListener() {
+        if (this.shadowRoot) {
+            let searchTimer;
+            let value = null;
+            const searchField = this.shadowRoot.querySelector('#search');
+            searchField.addEventListener('keyup', (event) => {
+                let target = event.target;
+                if (value != target.value) {
                     clearTimeout(searchTimer);
-                    value = event.target.value;
-                    searchTimer = setTimeout(function (_) {
-                        _this.search(value);
+                    value = target.value;
+                    searchTimer = setTimeout((_) => {
+                        this.search(value);
                     }, 300);
                 }
             });
-            this.updateVisbility('searchControl', this.searchable);
-        };
-        /**
-           * Updating Pager
-           */
-        VetproviehList.prototype._updatePager = function () {
-            if (this.shadowRoot) {
-                this.updateVisbility(this._pager.id, this.pageable);
-                this._pager.page = this.page;
-                this._pager.maximum = this.maxPage;
-            }
-        };
-        Object.defineProperty(VetproviehList.prototype, "_pager", {
-            /**
-               * GET Pager Element
-               * @return {VetproviehPager}
-               * @private
-               */
-            get: function () {
-                return this.shadowRoot.getElementById('pager');
-            },
-            enumerable: false,
-            configurable: true
-        });
-        Object.defineProperty(VetproviehList.prototype, "_readyToFetch", {
-            /**
-               * Can component fetch new data?
-               * @private
-               */
-            get: function () {
-                return this.pagesize && this.src && this.shadowRoot;
-            },
-            enumerable: false,
-            configurable: true
-        });
-        /**
-           * Loading Data from Remote-Server
-           * @param {string} searchValue
-           * @private
-           */
-        VetproviehList.prototype._fetchDataFromServer = function (searchValue) {
-            if (searchValue === void 0) { searchValue = null; }
-            if (this._readyToFetch) {
-                var self_1 = this;
-                fetch(this.src)
-                    .then(function (response) { return response.json(); })
-                    .then(function (data) { return VetproviehList.search(data, searchValue); })
-                    .then(function (data) { return self_1._setMaxPage(data.length) || data; })
-                    .then(function (data) { return self_1._filterByPage(data); })
-                    .then(function (data) { return self_1.attachData(data, searchValue, true); });
-            }
-        };
-        /**
-           * Set Max-Page by lenth of data
-           * @param {int} dataLength
-           */
-        VetproviehList.prototype._setMaxPage = function (dataLength) {
-            this.maxPage = Math.ceil(dataLength / this.pagesize);
-        };
-        /**
-           * Inserts Element to List
-           * @param {object} element
-           * @param {string} searchValue
-           * @private
-           */
-        VetproviehList.prototype._attachToList = function (element, searchValue) {
-            var list = this.shadowRoot.getElementById('listElements');
-            var newListItem = this._generateListItem(element);
-            src_1.ViewHelper.replacePlaceholdersInTemplate(newListItem, element);
+            this.updateVisibility('searchControl', this.searchable);
+        }
+    }
+    /**
+     * Updating Pager
+     */
+    _updatePager() {
+        if (this.shadowRoot) {
+            this.updateVisibility(this._pager.id, this.pageable);
+            this._pager.page = this.page;
+            this._pager.maximum = this.maxPage;
+        }
+    }
+    /**
+     * GET Pager Element
+     * @return {VetproviehPager}
+     * @private
+     */
+    get _pager() {
+        return this.shadowRoot.getElementById('pager');
+    }
+    /**
+     * Can component fetch new data?
+     * @private
+     */
+    get _readyToFetch() {
+        return this.pagesize && this.src && this.shadowRoot;
+    }
+    /**
+     * Loading Data from Remote-Server
+     * @param {string | undefined} searchValue
+     * @private
+     */
+    _fetchDataFromServer(searchValue = undefined) {
+        if (this._readyToFetch) {
+            const self = this;
+            fetch(this.src)
+                .then((response) => response.json())
+                .then((data) => VetproviehList.search(data, searchValue))
+                .then((data) => { self._setMaxPage(data.length); return data; })
+                .then((data) => self._filterByPage(data))
+                .then((data) => self.attachData(data, searchValue, true));
+        }
+    }
+    /**
+     * Set Max-Page by lenth of data
+     * @param {number} dataLength
+     * @return {boolean}
+     */
+    _setMaxPage(dataLength) {
+        this.maxPage = Math.ceil(dataLength / this.pagesize);
+        return true;
+    }
+    /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {string} searchValue
+     * @private
+     */
+    _attachToList(element, searchValue) {
+        if (this.shadowRoot) {
+            const list = this.shadowRoot.getElementById('listElements');
+            const newListItem = this._generateListItem(element);
+            ViewHelper.replacePlaceholders(newListItem, element);
             if (searchValue) {
-                src_1.ViewHelper.markElement(newListItem, searchValue);
+                ViewHelper.markElement(newListItem, searchValue);
             }
-            list.appendChild(newListItem);
-        };
-        /**
-           * Generate new Item for List which is based on the template
-           * @param {object} dataItem
-           * @return {HTMLElement}
-           * @private
-           */
-        VetproviehList.prototype._generateListItem = function (dataItem) {
-            var _this = this;
-            var newNode = document.importNode(this._properties.listTemplate, true);
-            var div = document.createElement('div');
-            div.addEventListener('click', function (event) {
-                var selectedEvent = new Event('selected');
-                selectedEvent['data'] = dataItem;
-                _this.dispatchEvent(selectedEvent);
+            if (list)
+                list.appendChild(newListItem);
+        }
+    }
+    /**
+     * Generate new Item for List which is based on the template
+     * @param {any} dataItem
+     * @return {HTMLDivElement}
+     * @private
+     */
+    _generateListItem(dataItem) {
+        const newNode = document.importNode(this._listTemplate, true);
+        const div = document.createElement('div');
+        div.addEventListener('click', (event) => {
+            const selectedEvent = new Event('selected');
+            selectedEvent['data'] = dataItem;
+            this.dispatchEvent(selectedEvent);
+        });
+        div.appendChild(newNode);
+        return div;
+    }
+    /**
+     * Filter Data by Page
+     * @param {Array} data
+     * @param {number} currentPage
+     * @param {number} pageSize
+     * @return {Array}
+     * @private
+     */
+    _filterByPage(data) {
+        return data.slice((this.page - 1) * this.pagesize, this.page * this.pagesize);
+    }
+    // -----------------
+    // CLASS METHODS
+    // -----------------
+    /**
+     * Search by Value in Array
+     * @param {Array} data
+     * @param {string | undefined} searchValue
+     * @return {Array}
+     */
+    static search(data, searchValue) {
+        if (searchValue) {
+            return data.filter((e) => {
+                return ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
             });
-            div.appendChild(newNode);
-            return div;
-        };
-        /**
-           * Filter Data by Page
-           * @param {Array} data
-           * @param {number} currentPage
-           * @param {number} pageSize
-           * @return {Array}
-           * @private
-           */
-        VetproviehList.prototype._filterByPage = function (data) {
-            return data.slice((this.page - 1) * this.pagesize, this.page * this.pagesize);
-        };
-        // -----------------
-        // CLASS METHODS
-        // -----------------
-        /**
-           * Search by Value in Array
-           * @param {Array} data
-           * @param {string} searchValue
-           * @return {Array}
-           */
-        VetproviehList.search = function (data, searchValue) {
-            if (searchValue) {
-                return data.filter(function (e) {
-                    return src_1.ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
-                });
-            }
-            else {
-                return data;
-            }
-        };
-        return VetproviehList;
-    }(src_1.VetproviehElement));
-    exports.VetproviehList = VetproviehList;
-    customElements.define('vetprovieh-list', VetproviehList);
-});
+        }
+        else {
+            return data;
+        }
+    }
+}
+customElements.define('vetprovieh-list', VetproviehList);
+
+export default VetproviehList;
+//# sourceMappingURL=vetprovieh-list.js.map

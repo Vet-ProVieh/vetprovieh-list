@@ -28,11 +28,14 @@
   },
   "devDependencies": {
     "@polymer/iron-demo-helpers": "^3.1.0",
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
     "@types/jest": "^25.2.3",
     "@webcomponents/webcomponentsjs": "^2.4.3",
     "eslint": "^7.1.0",
     "eslint-config-google": "^0.14.0",
     "jest": "^26.0.1",
+    "rollup-plugin-typescript": "^1.0.1",
     "ts-jest": "^26.0.0",
     "typescript": "^3.9.3"
   },

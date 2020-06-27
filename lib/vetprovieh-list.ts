@@ -8,7 +8,7 @@ import {ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-
  * @property {boolean} pageable
  * @property {string} src
  */
-export class VetproviehList extends VetproviehElement {
+export default class VetproviehList extends VetproviehElement {
 
     /**
      * Getting View Template
@@ -57,7 +57,7 @@ export class VetproviehList extends VetproviehElement {
     private _pageable: boolean = true;
     private _page: number = 1;
     private _maxPage: number = 1;
-    private _listTemplate: DocumentFragment = html`<p>No Template found. Please define one</p>`;
+    private _listTemplate: DocumentFragment;
 
     /**
      * Default Constructor
@@ -254,13 +254,14 @@ export class VetproviehList extends VetproviehElement {
      */
     _addSearchFieldListener() {
         if (this.shadowRoot) {
-            let searchTimer = 0;
+            let searchTimer;
             let value = null;
             const searchField = this.shadowRoot.querySelector('#search');
             searchField.addEventListener('keyup', (event) => {
-                if (value != event.target.value) {
+                let target = event.target as HTMLInputElement
+                if (value != target.value) {
                     clearTimeout(searchTimer);
-                    value = event.target.value;
+                    value = target.value;
                     searchTimer = setTimeout((_) => {
                         this.search(value);
                     }, 300);
@@ -310,7 +311,7 @@ export class VetproviehList extends VetproviehElement {
             fetch(this.src)
                 .then((response) => response.json())
                 .then((data) => VetproviehList.search(data, searchValue))
-                .then((data) => self._setMaxPage(data.length) || data)
+                .then((data) => {self._setMaxPage(data.length); return data})
                 .then((data) => self._filterByPage(data))
                 .then((data) => self.attachData(data, searchValue, true));
         }
