@@ -1,5 +1,5 @@
-import { VetproviehPager } from '@tomuench/vetprovieh-pager';
-import { VetproviehElement } from '@tomuench/vetprovieh-shared';
+import { VetproViehPager } from "@tomuench/vetprovieh-pager";
+import { VetproviehElement } from "@tomuench/vetprovieh-shared";
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
@@ -7,7 +7,17 @@ import { VetproviehElement } from '@tomuench/vetprovieh-shared';
  * @property {boolean} pageable
  * @property {string} src
  */
-export declare class VetproviehList extends VetproviehElement {
+export default class VetproviehList extends VetproviehElement {
+    /**
+     * Getting View Template
+     * @return {string}
+     */
+    static get template(): string;
+    /**
+     * Getting observed Attributes
+     * @return {string[]}
+     */
+    static get observedAttributes(): string[];
     private _src;
     private _pagesize;
     private _searchable;
@@ -20,7 +30,7 @@ export declare class VetproviehList extends VetproviehElement {
      * accepts a template as parameter
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate?: HTMLTemplateElement | undefined);
+    constructor(pListTemplate: HTMLTemplateElement);
     /**
      * Getter searchable
      * @property {string|null} searchable
@@ -76,20 +86,26 @@ export declare class VetproviehList extends VetproviehElement {
     set page(val: number);
     /**
      * Getter MaxPage
+     * @property {int} maxPage
      * @return {int}
      */
     get maxPage(): number;
+    /**
+     * Setter MaxPage
+     * @param {int} val
+     */
+    set maxPage(val: number);
     /**
      * Connected Callback
      */
     connectedCallback(): void;
     /**
      * Attach Data to List
-     * @param {Array<any>} data
-     * @param {string | undefined} searchValue
+     * @param {Array} data
+     * @param {string} searchValue
      * @param {boolean} clear
      */
-    attachData(data: any[], searchValue: string | undefined, clear?: boolean): void;
+    attachData(data: any, searchValue: any, clear?: boolean): void;
     /**
      * Search for a string
      * @param {string} searchString
@@ -114,12 +130,12 @@ export declare class VetproviehList extends VetproviehElement {
      * @return {VetproviehPager}
      * @private
      */
-    get _pager(): VetproviehPager;
+    get _pager(): VetproViehPager;
     /**
      * Can component fetch new data?
      * @private
      */
-    get _readyToFetch(): "" | 0 | ShadowRoot | null;
+    get _readyToFetch(): any;
     /**
      * Loading Data from Remote-Server
      * @param {string | undefined} searchValue
@@ -134,11 +150,11 @@ export declare class VetproviehList extends VetproviehElement {
     _setMaxPage(dataLength: number): boolean;
     /**
      * Inserts Element to List
-     * @param {any} element
-     * @param {string | undefined} searchValue
+     * @param {object} element
+     * @param {string} searchValue
      * @private
      */
-    _attachToList(element: any, searchValue: string | undefined): void;
+    _attachToList(element: any, searchValue: any): void;
     /**
      * Generate new Item for List which is based on the template
      * @param {any} dataItem
@@ -162,15 +178,5 @@ export declare class VetproviehList extends VetproviehElement {
      * @return {Array}
      */
     static search(data: Array<any>, searchValue: string | undefined): any[];
-    /**
-   * Getting View Template
-   * @return {string}
-   */
-    static get template(): string;
-    /**
-       * Getting observed Attributes
-       * @return {string[]}
-       */
-    static get observedAttributes(): string[];
 }
 //# sourceMappingURL=vetprovieh-list.d.ts.map

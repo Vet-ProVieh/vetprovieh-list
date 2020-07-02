@@ -1,6 +1,173 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const vetprovieh_shared_1 = require("@tomuench/vetprovieh-shared");
+/**
+ * Helper to get and set Attributes on Objects
+ */
+class ObjectHelper {
+    /**
+       * Getting Value from JSON-Object
+       * @param {Indexable} object
+       * @param {string} key
+       * @return {any}
+       */
+    static get(object, key) {
+        try {
+            const attributes = key.split('.');
+            return this._iterateThrough(object, attributes);
+        }
+        catch (ex) {
+            return undefined;
+        }
+    }
+    /**
+       * Iterating Through Object
+       * @param {Indexable} obj
+       * @param {string[]} attributes
+       * @param {number} depth
+       * @return {any}
+       * @private
+       */
+    static _iterateThrough(obj, attributes, depth = 0) {
+        if (depth < 0)
+            return undefined;
+        while (attributes.length > depth) {
+            const attribute = attributes.shift();
+            if (!obj)
+                throw new Error('Unknown Key');
+            obj = obj[attribute];
+        }
+        return obj;
+    }
+    /**
+       * Setting value for Object
+       * @param {Indexable} object
+       * @param {string} key
+       * @param {any} value
+       */
+    static set(object, key, value) {
+        const attributes = key.split('.');
+        object = this._iterateThrough(object, attributes, 1);
+        const property = attributes[0];
+        object[property] = value;
+    }
+    /**
+       * Object to String
+       * @param {Object} obj
+       * @return {string}
+       */
+    static objectToStringDeep(obj) {
+        if (!obj)
+            return '';
+        return Object.keys(obj).map((k) => {
+            const value = obj[k];
+            if (typeof (value) == 'object') {
+                return ObjectHelper.objectToStringDeep(value);
+            }
+            else {
+                return value;
+            }
+        }).toString();
+    }
+}
+
+/**
+ * Helpers for View
+ */
+class ViewHelper {
+    /**
+       * Mark text yellow inside an element.
+       * @param {Node} element
+       * @param {string} input
+       */
+    static markElement(element, input) {
+        if (input != '') {
+            element.childNodes.forEach((n) => {
+                const value = n.nodeValue || '';
+                if (n.nodeName === '#text' && value.indexOf(input) >= 0) {
+                    element.innerHTML = n['data']
+                        .split(input)
+                        .join('<mark>' + input + '</mark>');
+                }
+                else {
+                    ViewHelper.markElement(n, input);
+                }
+            });
+        }
+    }
+    /**
+       * Regex to fill keys in template
+       * @return {RegExp}
+       */
+    static get regexTemplate() {
+        return /{{([a-zA-Z0-9\.]+)}}/;
+    }
+    /**
+       * Replacing Placeholders in template from the loaded element
+       * @param {HTMLElement} template
+       * @param {Indexable} e
+       */
+    static replacePlaceholders(template, e) {
+        let match = null;
+        while (match = template.innerHTML.match(ViewHelper.regexTemplate)) {
+            let value = ObjectHelper.get(e, match[1]);
+            value = value || '';
+            template.innerHTML = template.innerHTML.replace(match[0], value);
+        }
+    }
+}
+
+/**
+ * BaseClass for view Elements
+ */
+class VetproviehElement extends HTMLElement {
+    /**
+       * Callback Implementation
+       * @param {string} name
+       * @param {any} old
+       * @param {any} value
+       */
+    attributeChangedCallback(name, old, value) {
+        if (old !== value) {
+            this[name] = value;
+        }
+    }
+    /**
+     * Loading HTML-Element From ShadowRoot
+     * @param {string} id
+     * @return {HTMLElement | undefined}
+     */
+    getByIdFromShadowRoot(id) {
+        if (this.shadowRoot) {
+            return this.shadowRoot.getElementById(id);
+        }
+    }
+    /**
+       * Hide Or Show Element
+       * @param {string} id
+       * @param {boolean} show
+       */
+    updateVisibility(id, show) {
+        const search = this.getByIdFromShadowRoot(id);
+        if (search) {
+            if (!show) {
+                search.classList.add('is-hidden');
+            }
+            else {
+                search.classList.remove('is-hidden');
+            }
+        }
+    }
+    // -----------------
+    // CLASS METHODS
+    // -----------------
+    /**
+       * Getting Template
+       * @return {string}
+       */
+    static get template() {
+        return `<link href="../node_modules/bulma/css/bulma.min.css" 
+                  rel="stylesheet" type="text/css">`;
+    }
+}
+
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
@@ -8,7 +175,7 @@ const vetprovieh_shared_1 = require("@tomuench/vetprovieh-shared");
  * @property {boolean} pageable
  * @property {string} src
  */
-class VetproviehList extends vetprovieh_shared_1.VetproviehElement {
+class VetproviehList extends VetproviehElement {
     /**
      * Default Constructor
      * accepts a template as parameter
@@ -32,7 +199,7 @@ class VetproviehList extends vetprovieh_shared_1.VetproviehElement {
      * @return {string}
      */
     static get template() {
-        return vetprovieh_shared_1.VetproviehElement.template + ` 
+        return VetproviehElement.template + ` 
     <style>
       :host {
         display: block;
@@ -303,9 +470,9 @@ class VetproviehList extends vetprovieh_shared_1.VetproviehElement {
         if (this.shadowRoot) {
             const list = this.shadowRoot.getElementById('listElements');
             const newListItem = this._generateListItem(element);
-            vetprovieh_shared_1.ViewHelper.replacePlaceholders(newListItem, element);
+            ViewHelper.replacePlaceholders(newListItem, element);
             if (searchValue) {
-                vetprovieh_shared_1.ViewHelper.markElement(newListItem, searchValue);
+                ViewHelper.markElement(newListItem, searchValue);
             }
             if (list)
                 list.appendChild(newListItem);
@@ -351,7 +518,7 @@ class VetproviehList extends vetprovieh_shared_1.VetproviehElement {
     static search(data, searchValue) {
         if (searchValue) {
             return data.filter((e) => {
-                return vetprovieh_shared_1.ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
+                return ObjectHelper.objectToStringDeep(e).indexOf(searchValue) >= 0;
             });
         }
         else {
@@ -359,5 +526,7 @@ class VetproviehList extends vetprovieh_shared_1.VetproviehElement {
         }
     }
 }
-exports.default = VetproviehList;
 customElements.define('vetprovieh-list', VetproviehList);
+
+export default VetproviehList;
+//# sourceMappingURL=vetprovieh-list.js.map
