@@ -64,7 +64,7 @@ export class VetproviehList extends VetproviehElement {
      * accepts a template as parameter
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate: HTMLTemplateElement | undefined) {
+    constructor(pListTemplate: HTMLTemplateElement | undefined = undefined) {
         super();
 
         const listTemplate = pListTemplate || this.querySelector('template');
