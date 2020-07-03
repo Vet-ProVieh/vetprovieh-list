@@ -27,20 +27,26 @@
     "bulma": "^0.8.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
     "@polymer/iron-demo-helpers": "^3.1.0",
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^8.1.0",
     "@types/jest": "^25.2.3",
     "@webcomponents/webcomponentsjs": "^2.4.3",
+    "babel-jest": "^26.1.0",
     "eslint": "^7.1.0",
     "eslint-config-google": "^0.14.0",
     "jest": "^26.0.1",
+    "jest-fetch-mock": "^3.0.3",
     "rollup-plugin-typescript": "^1.0.1",
     "ts-jest": "^26.0.0",
     "typescript": "^3.9.3"
   },
   "scripts": {
-    "build": "tsc",
-    "test": "jest --colors --coverage test"
+    "build": "rollup -c; tsc -d dist/vetprovieh-list.js --emitDeclarationOnly --allowJs",
+    "test": "jest --colors --coverage test",
+    "serve": "npx http-server",
+    "lint": "eslint . --ext .ts --fix"
   }
 }

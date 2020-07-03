@@ -8,7 +8,7 @@ import {ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-
  * @property {boolean} pageable
  * @property {string} src
  */
-export default class VetproviehList extends VetproviehElement {
+export class VetproviehList extends VetproviehElement {
 
     /**
      * Getting View Template
@@ -64,7 +64,7 @@ export default class VetproviehList extends VetproviehElement {
      * accepts a template as parameter
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate: HTMLTemplateElement) {
+    constructor(pListTemplate: HTMLTemplateElement | undefined) {
         super();
 
         const listTemplate = pListTemplate || this.querySelector('template');
@@ -166,7 +166,7 @@ export default class VetproviehList extends VetproviehElement {
      * @param {int} val
      */
     set page(val) {
-        if (val !== this.page) {
+        if (val !== this.page && val <= this.maxPage) {
             this._page = val;
             this._updatePager();
         }

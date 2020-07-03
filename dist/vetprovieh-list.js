@@ -528,5 +528,5 @@ class VetproviehList extends VetproviehElement {
 }
 customElements.define('vetprovieh-list', VetproviehList);
 
-export default VetproviehList;
+export { VetproviehList };
 //# sourceMappingURL=vetprovieh-list.js.map

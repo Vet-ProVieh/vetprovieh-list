@@ -4,7 +4,7 @@ enableFetchMocks();
 
 import { VetproviehList } from "../lib/vetprovieh-list";
 import { VetproviehPager } from '@tomuench/vetprovieh-pager';
-import { Indexable } from '@tomuench/vetprovieh-shared';
+import { Indexable } from '@tomuench/vetprovieh-shared/lib/interfaces/indexable';
 
 
 // Testtemplate
