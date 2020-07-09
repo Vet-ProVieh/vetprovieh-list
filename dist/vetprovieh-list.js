@@ -181,7 +181,7 @@ class VetproviehList extends VetproviehElement {
      * accepts a template as parameter
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate) {
+    constructor(pListTemplate = undefined) {
         super();
         this._src = "";
         this._pagesize = 0;
@@ -316,7 +316,7 @@ class VetproviehList extends VetproviehElement {
      * @param {int} val
      */
     set page(val) {
-        if (val !== this.page) {
+        if (val !== this.page && val <= this.maxPage) {
             this._page = val;
             this._updatePager();
         }

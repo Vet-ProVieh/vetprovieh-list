@@ -23,7 +23,7 @@ export class VetproviehList extends VetproviehElement {
      * accepts a template as parameter
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate: HTMLTemplateElement);
+    constructor(pListTemplate?: HTMLTemplateElement);
     _src: string;
     _pagesize: number;
     _searchable: boolean;
