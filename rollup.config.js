@@ -16,14 +16,14 @@ export default {
         commonjs({
             // non-CommonJS modules will be ignored, but you can also
             // specifically include/exclude files
-            include: 'node_modules/**',  // Default: undefined
+            include: 'node_modules/**/*',  // Default: undefined
             exclude: [ ],  // Default: undefined
             // these values can also be regular expressions
             // include: /node_modules/
       
             // search for files other than .js files (must already
             // be transpiled by a previous plugin!)
-            extensions: [ '.ts' ],  // Default: [ '.js' ]
+            extensions: [ '.ts',".js" ],  // Default: [ '.js' ]
       
             // if true then uses of `global` won't be dealt with by this plugin
             ignoreGlobal: false,  // Default: false

@@ -1,6 +1,7 @@
-import {VetproViehPager} from "@tomuench/vetprovieh-pager";
+import {VetproviehPager} from "@tomuench/vetprovieh-pager";
 import {ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-shared";
 
+export {VetproviehPager} from "@tomuench/vetprovieh-pager";
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
@@ -242,7 +243,7 @@ export class VetproviehList extends VetproviehElement {
     _addPagerListener() {
         if (this._pager) {
             this._pager.addEventListener('change', (event) => {
-                this.page = event.target.page;
+                this.page = (event.target as VetproviehPager).page;
                 this._fetchDataFromServer();
             });
         }
@@ -287,8 +288,8 @@ export class VetproviehList extends VetproviehElement {
      * @return {VetproviehPager}
      * @private
      */
-    get _pager() : VetproViehPager {
-        return this.shadowRoot.getElementById('pager');
+    get _pager() : VetproviehPager {
+        return this.shadowRoot.getElementById('pager') as VetproviehPager;
     }
 
     /**
