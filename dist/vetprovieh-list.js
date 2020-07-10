@@ -163,7 +163,7 @@ class VetproviehElement extends HTMLElement {
        * @return {string}
        */
     static get template() {
-        return `<link href="../node_modules/bulma/css/bulma.min.css" 
+        return `<link href="/node_modules/bulma/css/bulma.min.css" 
                   rel="stylesheet" type="text/css">`;
     }
 }
