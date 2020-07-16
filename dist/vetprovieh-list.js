@@ -168,223 +168,176 @@ class VetproviehElement extends HTMLElement {
     }
 }
 
-/**
- * Helper to get and set Attributes on Objects
- */
+class VetproviehPager extends HTMLElement {
 
-/**
- * BaseClass for view Elements
- */
-class VetproviehElement$1 extends HTMLElement {
-    /**
-       * Callback Implementation
-       * @param {string} name
-       * @param {any} old
-       * @param {any} value
-       */
-    attributeChangedCallback(name, old, value) {
-        if (old !== value) {
-            this[name] = value;
-        }
-    }
-    /**
-     * Loading HTML-Element From ShadowRoot
-     * @param {string} id
-     * @return {HTMLElement | undefined}
-     */
-    getByIdFromShadowRoot(id) {
-        if (this.shadowRoot) {
-            return this.shadowRoot.getElementById(id);
-        }
-    }
-    /**
-       * Hide Or Show Element
-       * @param {string} id
-       * @param {boolean} show
-       */
-    updateVisibility(id, show) {
-        const search = this.getByIdFromShadowRoot(id);
-        if (search) {
-            if (!show) {
-                search.classList.add('is-hidden');
-            }
-            else {
-                search.classList.remove('is-hidden');
-            }
-        }
-    }
-    // -----------------
-    // CLASS METHODS
-    // -----------------
-    /**
-       * Getting Template
-       * @return {string}
-       */
-    static get template() {
-        return `<link href="/node_modules/bulma/css/bulma.min.css" 
-                  rel="stylesheet" type="text/css">`;
-    }
-}
-
-/**
- * Paging Class
- */
-class VetproviehPager extends VetproviehElement$1 {
-    constructor() {
-        super(...arguments);
-        this._properties = {
-            page: 1,
-            maximum: 1,
-        };
-    }
-    /**
-     * Observed Attributes
-     * @return {Array<string>}
-     */
-    static get observedAttributes() {
+      static get observedAttributes() {
         return ['page', 'maximum'];
-    }
-    /**
-     * Template for Pager
-     * @return {string}
-     */
-    static get template() {
-        return super.template + `
+      }
+
+      static get template() {
+        return `
+        <link href="/node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
         <style>
           :host {
             display: block;
           }
         </style>
-        <nav class="pagination is-centered is-small" role="navigation" 
-             aria-label="pagination">
+        <nav class="pagination is-centered is-small" role="navigation" aria-label="pagination">
           <ul id="pager" class="pagination-list">
           </ul>
         </nav>`;
-    }
-    /**
-     * Page Getter
-     * @property {number|null} page
-     */
-    get page() {
+      }
+
+      attributeChangedCallback(name, old, value) {
+        if (old !== value) {
+          this[name] = value;
+        }
+      }
+
+      constructor() {
+        super();
+
+        /**
+         * @type {!Object}
+         * @private
+         */
+        this._properties = {
+          page: 1,
+          maximum: 1
+        };
+      }
+
+      /** 
+       * @property {string|null} page
+       */
+      get page() {
         return this._properties.page;
-    }
-    /**
-     * Setting page
-     * @param {number} val
-     */
-    set page(val) {
-        if (typeof (val) === 'string')
-            val = parseInt(val);
-        if (val !== this.page && val <= this.maximum && val > 0) {
-            this._properties.page = val;
-            this._updateRendering();
+      }
+
+      set page(val) {
+        let valAsInt = parseInt(val);
+        if (valAsInt !== this.page) {
+          this._properties.page = valAsInt;
+          this._updateRendering();
         }
-    }
-    /**
-     * @property {number|null} maximum
-     */
-    get maximum() {
+      }
+
+      /** 
+       * @property {string|null} maximum
+       */
+      get maximum() {
         return this._properties.maximum;
-    }
-    /**
-     * Setting Maximum
-     * @param {number} val
-     */
-    set maximum(val) {
-        if (val !== this.maximum) {
-            this._properties.maximum = val;
-            this._updateRendering();
+      }
+
+      set maximum(val) {
+        let valAsInt = parseInt(val);
+        if (valAsInt !== this.maximum) {
+          this._properties.maximum = valAsInt;
+          this._updateRendering();
         }
-    }
-    /**
-     * Render Pages for Pager
-     * @private
-     */
-    _renderPages() {
-        const pager = this.getByIdFromShadowRoot('pager');
+      }
+
+      /**
+       * Render Pages for Pager
+       * @return [string]
+       * @private
+       */
+      _renderPages() {
+        let pager = this.shadowRoot.querySelector('#pager');
         pager.appendChild(this._renderPage(1));
         this._addBlankPage(pager, this.page > 3);
+
         for (let i = -1; i < 2; i++) {
-            const toDisplayPage = this.page + i;
-            if (toDisplayPage > 1 && toDisplayPage < this.maximum) {
-                pager.appendChild(this._renderPage(toDisplayPage));
-            }
+          const toDisplayPage = this.page + i;
+          if (toDisplayPage > 1 && toDisplayPage < this.maximum) {
+            pager.appendChild(this._renderPage(toDisplayPage));
+          }
         }
+
         this._addBlankPage(pager, this.page < this.maximum - 2);
         if (this.maximum != 1) {
-            pager.appendChild(this._renderPage(this.maximum));
+          pager.appendChild(this._renderPage(this.maximum));
         }
-    }
-    /**
-     * render Page placeholder
-     * @param {HTMLElement} pager
-     * @param {boolean} show
-     * @private
-     */
-    _addBlankPage(pager, show) {
+      }
+
+      /**
+       * render Page placeholder
+       * @param [HTMLElement] pager
+       * @param [boolean] show
+       * @private
+       */
+      _addBlankPage(pager, show) {
         if (show) {
-            const li = document.createElement('li');
-            const span = document.createElement('span');
-            span.classList.add('pagination-ellipsis');
-            span.innerHTML = '&hellip;';
-            li.appendChild(span);
-            pager.appendChild(li);
+          var li = document.createElement('li');
+          var span = document.createElement('span');
+          span.classList.add("pagination-ellipsis");
+          span.innerHTML = "&hellip;";
+          li.appendChild(span);
+          pager.appendChild(li);
         }
-    }
-    /**
-     * Render Single page Button
-     * @param {number} page
-     * @return {HTMLLIElement} Element
-     * @private
-     */
-    _renderPage(page) {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
+      }
+
+      /**
+       * Render Single page Button
+       * @param [number] page
+       * @return [HTMLLIElement] Element
+       * @private
+       */
+      _renderPage(page) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
         a.classList.add('pagination-link');
         if (page === this.page) {
-            a.classList.add('is-current');
+          a.classList.add('is-current');
         }
+
         a.onclick = (event) => this._pageClickedEvent(this, event);
-        a.title = 'Open Page #' + this.page;
-        const linkText = document.createTextNode(page.toString());
+
+        a.title = "Open Page #" + this.page;
+        var linkText = document.createTextNode(page);
         a.appendChild(linkText);
         li.appendChild(a);
+
         return li;
-    }
-    /**
-     * Page-Button has been clicked
-     * @param {VetproviehPager} pager
-     * @param {Event} event
-     * @private
-     */
-    _pageClickedEvent(pager, event) {
-        pager.page = parseInt(event.target.innerText);
-        pager.dispatchEvent(new Event('change'));
-    }
-    /**
-     * Connected Callback
-     */
-    connectedCallback() {
+      }
+
+      /**
+       * Page-Button has been clicked
+       * @param [VetproviehPager] pager
+       * @param [Event] event
+       * @private
+       */
+      _pageClickedEvent(pager, event) {
+        var pageBefore = pager.page;
+        pager.page = event.target.innerText;
+
+        pager.dispatchEvent(new Event("change"));
+      }
+
+
+      connectedCallback() {
         // Lazy creation of shadowRoot.
         if (!this.shadowRoot) {
-            this.attachShadow({
-                mode: 'open',
-            }).innerHTML = VetproviehPager.template;
+          this.attachShadow({
+            mode: 'open'
+          }).innerHTML = VetproviehPager.template;
         }
         this._updateRendering();
-    }
-    /**
-     * @private
-     */
-    _updateRendering() {
-        if (this.shadowRoot) {
-            const pager = this.getByIdFromShadowRoot('pager');
-            pager.innerHTML = '';
-            this._renderPages();
+      }
+
+      /**
+       * @private
+       */
+      _updateRendering() {
+        // Avoid rendering when not connected.
+        if (this.shadowRoot && this.isConnected) {
+          this.shadowRoot.querySelector('#pager').innerHTML = "";
+          this._renderPages();
         }
+      }
     }
-}
-customElements.define('vetprovieh-pager', VetproviehPager);
+
+    customElements.define('vetprovieh-pager', VetproviehPager);
 
 /**
  * List Element for Vet:Provieh
@@ -499,9 +452,22 @@ class VetproviehList extends VetproviehElement {
      */
     set src(val) {
         if (val !== this.src) {
-            this._src = val;
+            this._src = this._replaceParams(val);
             this._fetchDataFromServer();
         }
+    }
+    _replaceParams(val) {
+        let newSrc = val;
+        let regex = /{{([a-zA-Z0-9]+)}}/;
+        const url = new URL(window.location.href);
+        const matches = newSrc.match(regex);
+        if (matches) {
+            matches.shift();
+            matches.forEach((m) => {
+                newSrc = newSrc.replace("{{" + m + "}}", url.searchParams.get(m));
+            });
+        }
+        return newSrc;
     }
     /**
      * Getter pagesize
@@ -692,8 +658,22 @@ class VetproviehList extends VetproviehElement {
             if (searchValue) {
                 ViewHelper.markElement(newListItem, searchValue);
             }
-            if (list)
+            if (list) {
+                this._attachDataToStoreLocalLink(element, newListItem);
                 list.appendChild(newListItem);
+            }
+        }
+    }
+    /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {HTMLElement} newListItem
+     * @private
+     */
+    _attachDataToStoreLocalLink(element, newListItem) {
+        const link = newListItem.getElementsByTagName("a")[0];
+        if (link && link.attributes["is"] && link.attributes["is"].value === "local-store") {
+            link.params = element;
         }
     }
     /**
@@ -705,6 +685,7 @@ class VetproviehList extends VetproviehElement {
     _generateListItem(dataItem) {
         const newNode = document.importNode(this._listTemplate, true);
         const div = document.createElement('div');
+        console.log(div.getElementsByTagName("a"));
         div.addEventListener('click', (event) => {
             const selectedEvent = new Event('selected');
             selectedEvent['data'] = dataItem;

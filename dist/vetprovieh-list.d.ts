@@ -62,6 +62,7 @@ export class VetproviehList extends VetproviehElement {
      * @return {string}
      */
     get src(): string;
+    _replaceParams(val: any): any;
     /**
      * Setter Pagesize
      * @param {int} val
@@ -156,6 +157,13 @@ export class VetproviehList extends VetproviehElement {
      */
     private _attachToList;
     /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {HTMLElement} newListItem
+     * @private
+     */
+    private _attachDataToStoreLocalLink;
+    /**
      * Generate new Item for List which is based on the template
      * @param {any} dataItem
      * @return {HTMLDivElement}
@@ -172,68 +180,52 @@ export class VetproviehList extends VetproviehElement {
      */
     private _filterByPage;
 }
-/**
- * Paging Class
- */
-export class VetproviehPager extends VetproviehElement$1 {
-    /**
-     * Observed Attributes
-     * @return {Array<string>}
-     */
+export class VetproviehPager extends HTMLElement {
     static get observedAttributes(): string[];
-    constructor(...args: any[]);
-    _properties: {
-        page: number;
-        maximum: number;
-    };
+    static get template(): string;
+    attributeChangedCallback(name: any, old: any, value: any): void;
     /**
-     * Setting page
-     * @param {number} val
+     * @type {!Object}
+     * @private
      */
-    set page(arg: number);
+    private _properties;
+    set page(arg: any);
     /**
-     * Page Getter
-     * @property {number|null} page
+     * @property {string|null} page
      */
-    get page(): number;
+    get page(): any;
+    set maximum(arg: any);
     /**
-     * Setting Maximum
-     * @param {number} val
+     * @property {string|null} maximum
      */
-    set maximum(arg: number);
-    /**
-     * @property {number|null} maximum
-     */
-    get maximum(): number;
+    get maximum(): any;
     /**
      * Render Pages for Pager
+     * @return [string]
      * @private
      */
     private _renderPages;
     /**
      * render Page placeholder
-     * @param {HTMLElement} pager
-     * @param {boolean} show
+     * @param [HTMLElement] pager
+     * @param [boolean] show
      * @private
      */
     private _addBlankPage;
     /**
      * Render Single page Button
-     * @param {number} page
-     * @return {HTMLLIElement} Element
+     * @param [number] page
+     * @return [HTMLLIElement] Element
      * @private
      */
     private _renderPage;
     /**
      * Page-Button has been clicked
-     * @param {VetproviehPager} pager
-     * @param {Event} event
+     * @param [VetproviehPager] pager
+     * @param [Event] event
      * @private
      */
     private _pageClickedEvent;
-    /**
-     * Connected Callback
-     */
     connectedCallback(): void;
     /**
      * @private
@@ -244,38 +236,6 @@ export class VetproviehPager extends VetproviehElement$1 {
  * BaseClass for view Elements
  */
 declare class VetproviehElement extends HTMLElement {
-    /**
-       * Getting Template
-       * @return {string}
-       */
-    static get template(): string;
-    /**
-       * Callback Implementation
-       * @param {string} name
-       * @param {any} old
-       * @param {any} value
-       */
-    attributeChangedCallback(name: string, old: any, value: any): void;
-    /**
-     * Loading HTML-Element From ShadowRoot
-     * @param {string} id
-     * @return {HTMLElement | undefined}
-     */
-    getByIdFromShadowRoot(id: string): HTMLElement | undefined;
-    /**
-       * Hide Or Show Element
-       * @param {string} id
-       * @param {boolean} show
-       */
-    updateVisibility(id: string, show: boolean): void;
-}
-/**
- * Helper to get and set Attributes on Objects
- */
-/**
- * BaseClass for view Elements
- */
-declare class VetproviehElement$1 extends HTMLElement {
     /**
        * Getting Template
        * @return {string}

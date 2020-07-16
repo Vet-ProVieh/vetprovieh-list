@@ -1,7 +1,9 @@
-import {VetproviehPager} from "@tomuench/vetprovieh-pager";
-import {ViewHelper, VetproviehElement, ObjectHelper} from "@tomuench/vetprovieh-shared";
+import { VetproviehPager } from "@tomuench/vetprovieh-pager";
+import { ViewHelper, VetproviehElement, ObjectHelper } from "@tomuench/vetprovieh-shared";
+import { Indexable } from "@tomuench/vetprovieh-shared/lib/interfaces/indexable";
 
 export {VetproviehPager} from "@tomuench/vetprovieh-pager";
+
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
@@ -127,9 +129,24 @@ export class VetproviehList extends VetproviehElement {
      */
     set src(val) {
         if (val !== this.src) {
-            this._src = val;
+            this._src = this._replaceParams(val);
             this._fetchDataFromServer();
         }
+    }
+
+    private _replaceParams(val: string) {
+        let newSrc: string = val;
+        let regex = /{{([a-zA-Z0-9]+)}}/;
+        const url = new URL(window.location.href);
+
+        const matches = newSrc.match(regex);
+        if (matches) {
+            matches.shift();
+            matches.forEach((m) => {
+                newSrc = newSrc.replace("{{" + m + "}}", url.searchParams.get(m));
+            })
+        }
+        return newSrc;
     }
 
     /**
@@ -288,7 +305,7 @@ export class VetproviehList extends VetproviehElement {
      * @return {VetproviehPager}
      * @private
      */
-    get _pager() : VetproviehPager {
+    get _pager(): VetproviehPager {
         return this.shadowRoot.getElementById('pager') as VetproviehPager;
     }
 
@@ -312,7 +329,7 @@ export class VetproviehList extends VetproviehElement {
             fetch(this.src)
                 .then((response) => response.json())
                 .then((data) => VetproviehList.search(data, searchValue))
-                .then((data) => {self._setMaxPage(data.length); return data})
+                .then((data) => { self._setMaxPage(data.length); return data })
                 .then((data) => self._filterByPage(data))
                 .then((data) => self.attachData(data, searchValue, true));
         }
@@ -345,7 +362,23 @@ export class VetproviehList extends VetproviehElement {
                 ViewHelper.markElement(newListItem, searchValue);
             }
 
-            if(list) list.appendChild(newListItem);
+            if (list) {
+                this._attachDataToStoreLocalLink(element, newListItem);
+                list.appendChild(newListItem);
+            }
+        }
+    }
+
+    /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {HTMLElement} newListItem
+     * @private
+     */
+    _attachDataToStoreLocalLink(element :object, newListItem: HTMLElement){
+        const link = newListItem.getElementsByTagName("a")[0] as Indexable;
+        if (link && link.attributes["is"] && link.attributes["is"].value === "local-store") {
+            link.params = element;
         }
     }
 
@@ -358,6 +391,9 @@ export class VetproviehList extends VetproviehElement {
     _generateListItem(dataItem: any) {
         const newNode = document.importNode(this._listTemplate, true);
         const div = document.createElement('div');
+
+        console.log(div.getElementsByTagName("a"));
+
         div.addEventListener('click', (event) => {
             const selectedEvent = new Event('selected');
             selectedEvent['data'] = dataItem;

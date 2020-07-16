@@ -104,7 +104,7 @@ describe('connectedCallback', function () {
 describe('search', () => {
     const list = generateList();
     const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
-    const search = list.getByIdFromShadowRoot("searchControl")  as HTMLElement;
+    const search = list.getByIdFromShadowRoot("searchControl") as HTMLElement;
     list.searchable = true;
     list.connectedCallback();
     list.search("Dagobert");
@@ -133,7 +133,7 @@ describe('search', () => {
     })
 
     test("test searchField event", () => {
-        const searchField = list.getByIdFromShadowRoot("search")  as HTMLInputElement;
+        const searchField = list.getByIdFromShadowRoot("search") as HTMLInputElement;
 
         searchField.value = "Paul";
         searchField.dispatchEvent(new KeyboardEvent("keyup"));
@@ -151,14 +151,14 @@ describe('page', () => {
     const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
     list.pagesize = 1;
 
-    beforeEach(function() {
+    beforeEach(function () {
         list.page = 1;
     });
-    
+
 
     test("should set page", () => {
         expect(list.maxPage).toEqual(2);
-        
+
         list.page = 2;
         expect(list.page).toEqual(2);
     });
@@ -177,7 +177,7 @@ describe('page', () => {
 
         setTimeout(() => {
             expect(listItems.innerHTML).toMatch("Dagobert");
-        },300);
+        }, 300);
 
     });
 })
@@ -190,7 +190,7 @@ describe("selectedEvent", () => {
     test("should fire event", () => {
         let firstItem = listItems.children[0];
 
-        list.addEventListener("selected",(event: Indexable) => {
+        list.addEventListener("selected", (event: Indexable) => {
             expect(event["data"]).toEqual(data[0]);
         });
 
