@@ -440,4 +440,6 @@ export class VetproviehList extends VetproviehElement {
     }
 }
 
-customElements.define('vetprovieh-list', VetproviehList);
+if(!customElements.get('vetprovieh-list')){
+    customElements.define('vetprovieh-list', VetproviehList);
+}

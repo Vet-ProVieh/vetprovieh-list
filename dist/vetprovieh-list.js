@@ -3,6 +3,13 @@
  */
 class ObjectHelper {
     /**
+     * Checking if the Element is an Object
+     * @param obj
+     */
+    static isObject(obj) {
+        return obj != null && typeof (obj) === 'object';
+    }
+    /**
        * Getting Value from JSON-Object
        * @param {Indexable} object
        * @param {string} key
@@ -93,6 +100,17 @@ class ViewHelper {
         }
     }
     /**
+     * Getting URL-Parameter from address
+     * @param {string} key
+     * @return {string}
+     */
+    static getParameter(key) {
+        const urlString = window.location.href;
+        const url = new URL(urlString);
+        const value = url.searchParams.get(key);
+        return value;
+    }
+    /**
        * Regex to fill keys in template
        * @return {RegExp}
        */
@@ -168,6 +186,192 @@ class VetproviehElement extends HTMLElement {
     }
 }
 
+/**
+ * Repeats Template Element. Amount is set by the amount of objects
+ * inside
+ */
+class VetproviehRepeat extends VetproviehElement {
+    /**
+     * Default-Contructor
+     * @param {HTMLTemplateElement} pListTemplate
+     */
+    constructor(pListTemplate = undefined) {
+        super();
+        this._objects = [];
+        this._orderBy = "+position";
+        const listTemplate = pListTemplate || this.querySelector('template');
+        if (listTemplate) {
+            this._listTemplate = listTemplate.content;
+        }
+        else {
+            this._listTemplate = new DocumentFragment();
+        }
+    }
+    /**
+      * Getting View Template
+      * @return {string}
+      */
+    static get template() {
+        return VetproviehElement.template + `<div id="listElements"></div>`;
+    }
+    /**
+       * Getting observed Attributes
+       * @return {string[]}
+       */
+    static get observedAttributes() {
+        return ['objects', 'orderBy'];
+    }
+    /**
+     * Get objects
+     * @return {Array<any>}
+     */
+    get objects() {
+        return this._objects;
+    }
+    /**
+     * Set objects
+     * @param {Array<any>} v
+     */
+    set objects(v) {
+        if (this._objects != v) {
+            this._objects = v;
+            this.clearAndRender();
+        }
+    }
+    /**
+    * Get OrderBy
+    * Expect "+position" for asceding positon
+    * Expect "-position" for descending position
+    * @return {string}
+    */
+    get orderBy() {
+        return this._orderBy;
+    }
+    /**
+     * Set OrderBy
+     * @param {string} v
+     */
+    set orderBy(v) {
+        if (this._orderBy != v) {
+            this._orderBy = v;
+            this.clearAndRender();
+        }
+    }
+    /**
+    * Connected Callback
+    */
+    connectedCallback() {
+        this._initalizeShadowRoot(VetproviehRepeat.template);
+        this.renderList();
+    }
+    /**
+     * Clear and Render
+     */
+    clearAndRender() {
+        this.clear();
+        this._sortObjects();
+        this.renderList();
+    }
+    /**
+     * Sorting Objects
+     */
+    _sortObjects() {
+        try {
+            let asc = this.orderBy.substring(0, 1) == "+" ? 1 : -1;
+            let argument = this.orderBy.substring(1);
+            this.objects = this.objects
+                .sort((a, b) => {
+                let aValue = a[argument];
+                let bValue = b[argument];
+                return (aValue - bValue) * asc;
+            });
+        }
+        catch (e) {
+        }
+    }
+    /**
+     * List will be cleared
+     */
+    clear() {
+        const list = this.list;
+        if (list)
+            list.innerHTML = '';
+    }
+    /**
+     * Rendering List-Content
+     */
+    renderList() {
+        this.objects
+            .forEach((obj, index) => {
+            this._attachToList(obj, index);
+        });
+    }
+    /**
+     * Inserts Element to List
+     * @param {any} dataItem
+     * @param {index} number
+     * @private
+     */
+    _attachToList(dataItem, index = 0) {
+        if (this.shadowRoot) {
+            const newListItem = this._generateListItem(dataItem);
+            dataItem["index"] = index;
+            ViewHelper.replacePlaceholders(newListItem, dataItem);
+            const list = this.list;
+            if (list) {
+                list.appendChild(newListItem.children[0]);
+            }
+        }
+    }
+    /**
+     * Getting List Element
+     * @return {HTMLElement | undefined}
+     */
+    get list() {
+        if (this.shadowRoot) {
+            return this.shadowRoot.getElementById('listElements');
+        }
+        else {
+            return undefined;
+        }
+    }
+    /**
+    * Generate new Item for List which is based on the template
+    * @param {any} dataItem
+    * @param {boolean} activatedEventListener
+    * @return {HTMLDivElement}
+    * @private
+    */
+    _generateListItem(dataItem, activatedEventListener = false) {
+        const newNode = document.importNode(this._listTemplate, true);
+        const div = document.createElement('div');
+        if (activatedEventListener) {
+            div.addEventListener('click', () => {
+                const selectedEvent = new Event('selected');
+                selectedEvent['data'] = dataItem;
+                this.dispatchEvent(selectedEvent);
+            });
+        }
+        div.appendChild(newNode);
+        return div;
+    }
+    /**
+     * Intializing Shadow-Root
+     * @param {string} template
+     */
+    _initalizeShadowRoot(template) {
+        // Lazy creation of shadowRoot.
+        if (!this.shadowRoot) {
+            super.attachShadow({
+                mode: 'open',
+            }).innerHTML = template;
+        }
+    }
+}
+if (!customElements.get('vp-repeat')) {
+    customElements.define('vp-repeat', VetproviehRepeat);
+}
+
 class VetproviehPager extends HTMLElement {
 
       static get observedAttributes() {
@@ -176,7 +380,7 @@ class VetproviehPager extends HTMLElement {
 
       static get template() {
         return `
-        <link href="/node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
+        <link href="../node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
         <style>
           :host {
             display: block;
@@ -725,7 +929,9 @@ class VetproviehList extends VetproviehElement {
         }
     }
 }
-customElements.define('vetprovieh-list', VetproviehList);
+if (!customElements.get('vetprovieh-list')) {
+    customElements.define('vetprovieh-list', VetproviehList);
+}
 
 export { VetproviehList, VetproviehPager };
 //# sourceMappingURL=vetprovieh-list.js.map
