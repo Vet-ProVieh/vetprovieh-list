@@ -358,6 +358,7 @@ class VetproviehRepeat extends VetproviehElement {
     /**
      * Intializing Shadow-Root
      * @param {string} template
+     * @protected
      */
     _initalizeShadowRoot(template) {
         // Lazy creation of shadowRoot.
@@ -380,7 +381,7 @@ class VetproviehPager extends HTMLElement {
 
       static get template() {
         return `
-        <link href="../node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
+        <link href="/node_modules/bulma/css/bulma.min.css" rel="stylesheet" type="text/css">
         <style>
           :host {
             display: block;

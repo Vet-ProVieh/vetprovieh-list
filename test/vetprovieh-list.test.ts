@@ -36,7 +36,7 @@ fetch.mockResponse(JSON.stringify(data));
 const generateList = () => {
     const list = new VetproviehList(template);
 
-    list.src = "fixtues/names/index.json";
+    list.attributeChangedCallback("src", null, "fixtues/names/index.json");
     list.pagesize = 20;
     list.connectedCallback();
 
@@ -186,6 +186,10 @@ describe('page', () => {
 describe("selectedEvent", () => {
     const list = generateList();
     const listItems = list.getByIdFromShadowRoot("listElements") as HTMLElement;
+
+    test('should have childrne to click', () => {
+        expect(listItems.childElementCount).toBeGreaterThan(0);
+    });
 
     test("should fire event", () => {
         let firstItem = listItems.children[0];
