@@ -1,11 +1,8 @@
-import { VetproviehPager } from "@tomuench/vetprovieh-pager";
-import { ViewHelper, VetproviehElement, ObjectHelper, Property, WebComponent } from "@tomuench/vetprovieh-shared/lib/index";
-import { Indexable } from "@tomuench/vetprovieh-shared/lib/interfaces/indexable";
-import { DataService } from "./data-service";
+import { VetproviehPager } from "@tomuench/vetprovieh-pager/lib";
+import { VetproviehElement, WebComponent, IRepository } from "@tomuench/vetprovieh-shared/lib/index";
 import { ListItem } from "./list-item";
 
-export {VetproviehPager} from "@tomuench/vetprovieh-pager";
-
+export { VetproviehPager } from "@tomuench/vetprovieh-pager/lib";
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
@@ -14,7 +11,7 @@ export {VetproviehPager} from "@tomuench/vetprovieh-pager";
  * @property {string} src
  */
 @WebComponent({
-    template: `<style>
+    template: VetproviehElement.template + `<style>
                 :host {
                     display: block;
                 }
@@ -48,18 +45,33 @@ export class VetproviehList extends VetproviehElement {
      * @return {string[]}
      */
     static get observedAttributes() {
-        return ['src', 'pagesize', 'searchable', 'pageable'];
+        return ['pagesize', 'searchable', 'pageable'];
     }
 
-    @Property()
-    src: string = "";
     private _pagesize: number = 0;
     private _searchable: boolean = true;
     private _pageable: boolean = true;
     private _page: number = 1;
     private _maxPage: number = 1;
     private _listTemplate: DocumentFragment;
-    protected _data: any[];
+
+    private _objects: any[] = [];
+    private _repository: IRepository<any> | undefined;
+
+    public get repository(){
+        return this._repository;
+    }
+
+    public set repository(val) {
+        if(this._repository != val){
+            this._repository = val;
+            this._filterObjects();
+        }
+    }
+
+    public get objects() {
+        return this._objects;
+    }
 
     /**
      * Default Constructor
@@ -118,31 +130,6 @@ export class VetproviehList extends VetproviehElement {
     }
 
     /**
-     * After Src-Set Callback
-     * @param value 
-     * @protected
-     */
-    protected _src_afterSet(value: any){
-        this.src = this._replaceParams(value);
-        this._fetchDataFromServer();
-    }
-
-    private _replaceParams(val: string) {
-        let newSrc: string = val;
-        let regex = /{{([a-zA-Z0-9]+)}}/;
-        const url = new URL(window.location.href);
-
-        const matches = newSrc.match(regex);
-        if (matches) {
-            matches.shift();
-            matches.forEach((m) => {
-                newSrc = newSrc.replace("{{" + m + "}}", url.searchParams.get(m));
-            })
-        }
-        return newSrc;
-    }
-
-    /**
      * Getter pagesize
      * @property {int} pagesize
      * @return {int}
@@ -159,7 +146,7 @@ export class VetproviehList extends VetproviehElement {
     set pagesize(val) {
         if (val !== this.pagesize) {
             this._pagesize = val;
-            this._fetchDataFromServer();
+            this._setMaxPage(this._objects.length);
         }
     }
 
@@ -210,7 +197,7 @@ export class VetproviehList extends VetproviehElement {
     connectedCallback() {
         super.connectedCallback();
         this._addSearchFieldListener();
-        this._fetchDataFromServer();
+        this._filterObjects();
         this._updatePager();
         this._addPagerListener();
     }
@@ -226,7 +213,7 @@ export class VetproviehList extends VetproviehElement {
             this.shadowRoot.getElementById('listElements').innerHTML = '';
         }
         data.forEach((element) => this._attachToList(element, searchValue));
-        this._data = data;
+        this._objects = data;
     }
 
     /**
@@ -234,7 +221,7 @@ export class VetproviehList extends VetproviehElement {
      * @param {string} searchString
      */
     search(searchString: string) {
-        this._fetchDataFromServer(searchString);
+        this._filterObjects(searchString);
     }
 
     // -----------------
@@ -249,7 +236,7 @@ export class VetproviehList extends VetproviehElement {
         if (this._pager) {
             this._pager.addEventListener('change', (event) => {
                 this.page = (event.target as VetproviehPager).page;
-                this._fetchDataFromServer();
+                this._filterObjects();
             });
         }
     }
@@ -302,7 +289,7 @@ export class VetproviehList extends VetproviehElement {
      * @private
      */
     get _readyToFetch() {
-        return this.pagesize && this.src && this.shadowRoot;
+        return this.pagesize && this.repository && this.shadowRoot;
     }
 
     /**
@@ -310,13 +297,14 @@ export class VetproviehList extends VetproviehElement {
      * @param {string | undefined} searchValue
      * @private
      */
-    _fetchDataFromServer(searchValue: string | undefined = undefined) {
+    _filterObjects(searchValue: string | undefined = undefined) {
         if (this._readyToFetch) {
             const self = this;
 
-            new DataService().all(this.src, searchValue)
+
+            this.repository.where(searchValue)
                 .then((data) => this._sort(data))
-                .then((data) => {self._setMaxPage(data.length); return data })
+                .then((data) => { self._setMaxPage(data.length); return data })
                 .then((data) => self._filterByPage(data))
                 .then((data) => self.attachData(data, searchValue, true));
         }
@@ -326,7 +314,7 @@ export class VetproviehList extends VetproviehElement {
      * Sorting Data. can be overwritten
      * @param data 
      */
-    protected _sort(data){
+    protected _sort(data) {
         return data;
     }
 
@@ -349,29 +337,15 @@ export class VetproviehList extends VetproviehElement {
     _attachToList(element, searchValue) {
         if (this.shadowRoot) {
             const list: HTMLElement | null = this.shadowRoot.getElementById('listElements');
-            const newListItem: ListItem = new ListItem(this, element);
-            
-            newListItem.mark(searchValue);
-
             if (list) {
-                this._attachDataToStoreLocalLink(element, newListItem);
+                const newListItem: ListItem = new ListItem(this, element);
+                newListItem.mark(searchValue);
                 list.appendChild(newListItem);
             }
         }
     }
 
-    /**
-     * Inserts Element to List
-     * @param {object} element
-     * @param {HTMLElement} newListItem
-     * @private
-     */
-    _attachDataToStoreLocalLink(element :object, newListItem: HTMLElement){
-        const link = newListItem.getElementsByTagName("a")[0] as Indexable;
-        if (link && link.attributes["is"] && link.attributes["is"].value === "local-store") {
-            link.params = element;
-        }
-    }
+
 
     /**
      * Filter Data by Page

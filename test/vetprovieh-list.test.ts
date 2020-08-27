@@ -5,6 +5,7 @@ enableFetchMocks();
 import { VetproviehList } from "../lib/vetprovieh-list";
 import { VetproviehPager } from '@tomuench/vetprovieh-pager';
 import { Indexable } from '@tomuench/vetprovieh-shared/lib/interfaces/indexable';
+import { PersonRepository } from './mockups/personRepository';
 
 
 // Testtemplate
@@ -35,20 +36,20 @@ fetch.mockResponse(JSON.stringify(data));
  */
 const generateList = () => {
     const list = new VetproviehList(template);
-
-    list.attributeChangedCallback("src", null, "fixtues/names/index.json");
+    list.repository = new PersonRepository();
     list.pagesize = 20;
     list.connectedCallback();
 
     return list;
 }
 
-
 describe('constructor', function () {
     test("should init default values", () => {
         const list = new VetproviehList(template);
-
-        expect(list.src).toEqual("");
+        list.connectedCallback();
+        setTimeout(() => {
+            expect(list.objects.length).toBeGreaterThan(0);
+        }, 100);
         expect(list.pagesize).toEqual(0);
         expect(list.pageable).toEqual(true);
         expect(list.page).toEqual(1);
@@ -57,12 +58,14 @@ describe('constructor', function () {
     })
 });
 
-describe('src', function () {
+describe('objects', function () {
     test('should set src', () => {
         let list = new VetproviehList(template);
-        list.src = "test";
-        list.src = "test";
-        expect(list.src).toBe("test");
+        list.repository = new PersonRepository();
+        list.connectedCallback();
+        setTimeout(() => {
+            expect(list.objects).toBe(data);
+        },200);
     })
 });
 

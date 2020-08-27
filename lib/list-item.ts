@@ -1,5 +1,5 @@
 import { VetproviehList } from "./vetprovieh-list";
-import { WebComponent, ViewHelper } from "@tomuench/vetprovieh-shared/lib";
+import { WebComponent, ViewHelper, Indexable } from "@tomuench/vetprovieh-shared/lib";
 
 
 @WebComponent({
@@ -9,9 +9,9 @@ import { WebComponent, ViewHelper } from "@tomuench/vetprovieh-shared/lib";
 export class ListItem extends HTMLElement {
 
     private _data: any;
-    private _list: VetproviehList;
+    private _list: any;
 
-    constructor(list: VetproviehList, data: any) {
+    constructor(list: any, data: any) {
         super();
         this._list = list;
         this._data = data;
@@ -32,10 +32,24 @@ export class ListItem extends HTMLElement {
         });
     }
 
+     /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {HTMLElement} newListItem
+     * @private
+     */
+    private _attachDataToStoreLocalLink(){
+        const link = this.getElementsByTagName("a")[0] as Indexable;
+        if (link && link.attributes["is"] && link.attributes["is"].value === "local-store") {
+            link.params = this._data;
+        }
+    }
+
     private _generate() {
         const newNode = document.importNode(this._list.listTemplate, true);
         this._attachEventListener('click');
         this.appendChild(newNode);
         ViewHelper.replacePlaceholders(this, this._data);
+        this._attachDataToStoreLocalLink();
     }
 }
