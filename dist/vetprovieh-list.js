@@ -165,14 +165,15 @@ class VetproviehElement extends HTMLElement {
     get template() {
         return '';
     }
-    constructor(shadowed = true) {
+    constructor(shadowed = true, render = true) {
         super();
         if (shadowed) {
             this.attachShadow({
                 mode: 'open',
             });
         }
-        this.render();
+        if (render)
+            this.render();
     }
     /**
        * Callback Implementation
@@ -234,6 +235,9 @@ class VetproviehElement extends HTMLElement {
             }
         }
     }
+    get innerHTML() {
+        return super.innerHTML;
+    }
     set innerHTML(input) {
         if (this.shadowRoot != null) {
             this.shadowRoot.innerHTML = input;
@@ -259,13 +263,13 @@ class VetproviehElement extends HTMLElement {
  * Repeats Template Element. Amount is set by the amount of objects
  * inside
  */
-class VetproviehRepeat extends VetproviehElement {
+class VetproviehBasicRepeat extends VetproviehElement {
     /**
      * Default-Contructor
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate = undefined) {
-        super();
+    constructor(pListTemplate = undefined, shadowed = true) {
+        super(shadowed);
         this._objects = [];
         this._orderBy = '+position';
         const listTemplate = pListTemplate || this.querySelector('template');
@@ -275,13 +279,6 @@ class VetproviehRepeat extends VetproviehElement {
         else {
             this._listTemplate = new DocumentFragment();
         }
-    }
-    /**
-        * Getting View Template
-        * @return {string}
-        */
-    static get template() {
-        return VetproviehElement.template + `<div id="listElements"></div>`;
     }
     /**
          * Getting observed Attributes
@@ -330,7 +327,7 @@ class VetproviehRepeat extends VetproviehElement {
     * Connected Callback
     */
     connectedCallback() {
-        this._initalizeShadowRoot(VetproviehRepeat.template);
+        this._initalizeShadowRoot(VetproviehBasicRepeat.template);
         this.renderList();
     }
     /**
@@ -438,9 +435,6 @@ class VetproviehRepeat extends VetproviehElement {
         }
     }
 }
-if (!customElements.get('vp-repeat')) {
-    customElements.define('vp-repeat', VetproviehRepeat);
-}
 
 function WebComponent(webComponentArgs) {
     /**
@@ -448,9 +442,14 @@ function WebComponent(webComponentArgs) {
        * @param {any} constructor
        * @param {string} tagName
        */
-    const defineTag = (constructor, tagName) => {
+    const defineTag = (constructor, tagName, extendElement) => {
         if (!customElements.get(tagName)) {
-            customElements.define(tagName, constructor);
+            if (extendElement) {
+                customElements.define(tagName, constructor, { extends: extendElement });
+            }
+            else {
+                customElements.define(tagName, constructor);
+            }
         }
     };
     return function (constructorFunction) {
@@ -472,10 +471,82 @@ function WebComponent(webComponentArgs) {
                 get: () => webComponentArgs.template || "",
             });
         }
-        defineTag(constructorFunction, webComponentArgs.tag);
+        defineTag(constructorFunction, webComponentArgs.tag, webComponentArgs.extends);
         return newConstructorFunction;
     };
 }
+
+/**
+ * Repeats Template Element. Amount is set by the amount of objects
+ * inside
+ */
+let VetproviehRepeat = /** @class */ (() => {
+    let VetproviehRepeat = class VetproviehRepeat extends VetproviehBasicRepeat {
+    };
+    VetproviehRepeat = __decorate([
+        WebComponent({
+            template: VetproviehElement.template + `<div id="listElements"></div>`,
+            tag: "vp-repeat"
+        })
+    ], VetproviehRepeat);
+    return VetproviehRepeat;
+})();
+
+let VetproviehTable = /** @class */ (() => {
+    let VetproviehTable = class VetproviehTable extends VetproviehBasicRepeat {
+        /**
+         * Inserts Element to List
+         * @param {any} dataItem
+         * @param {index} number
+         * @private
+         */
+        _attachToList(dataItem, index = 0) {
+            if (this.shadowRoot) {
+                const newListItem = this._generateListItem(dataItem);
+                dataItem['index'] = index;
+                ViewHelper.replacePlaceholders(newListItem, dataItem);
+                this._attachParamsToLink(newListItem, dataItem);
+                const list = this.list;
+                if (list) {
+                    list.appendChild(newListItem.children[0]);
+                }
+            }
+        }
+        _attachParamsToLink(newListItem, dataItem) {
+            let a = newListItem.getElementsByTagName("a")[0];
+            if (a) {
+                a.params = dataItem;
+            }
+        }
+        /**
+       * Generate new Item for List which is based on the template
+       * @param {any} dataItem
+       * @param {boolean} activatedEventListener
+       * @return {HTMLDivElement}
+       * @private
+       */
+        _generateListItem(dataItem, activatedEventListener = false) {
+            const newNode = document.importNode(this._listTemplate, true);
+            const div = document.createElement('tbody');
+            div.appendChild(newNode);
+            return div;
+        }
+    };
+    VetproviehTable = __decorate([
+        WebComponent({
+            template: VetproviehElement.template + `
+        <table class="table">
+          <thead>
+          </thead>
+          <tbody id="listElements">
+          </tbody>
+        </table>
+    `,
+            tag: "vp-table"
+        })
+    ], VetproviehTable);
+    return VetproviehTable;
+})();
 
 let ListItem = /** @class */ (() => {
     let ListItem = class ListItem extends HTMLElement {
@@ -526,6 +597,294 @@ let ListItem = /** @class */ (() => {
     ], ListItem);
     return ListItem;
 })();
+
+/**
+ * List Element for Vet:Provieh
+ * Reads Data from Webservice an shows it.
+ * @property {boolean} searchable
+ * @property {boolean} pageable
+ * @property {string} src
+ */
+class VetproviehBasicList extends VetproviehElement {
+    /**
+     * Default Constructor
+     * accepts a template as parameter
+     * @param {HTMLTemplateElement} pListTemplate
+     */
+    constructor(pListTemplate = undefined) {
+        super();
+        this._pagesize = 0;
+        this._searchable = true;
+        this._pageable = true;
+        this._page = 1;
+        this._maxPage = 1;
+        this._objects = [];
+        const listTemplate = pListTemplate || this.querySelector('template');
+        if (listTemplate) {
+            this._listTemplate = listTemplate.content;
+        }
+    }
+    /**
+     * Getting observed Attributes
+     * @return {string[]}
+     */
+    static get observedAttributes() {
+        return ['pagesize', 'searchable', 'pageable'];
+    }
+    get repository() {
+        return this._repository;
+    }
+    set repository(val) {
+        if (this._repository != val) {
+            this._repository = val;
+            this._filterObjects();
+        }
+    }
+    get objects() {
+        return this._objects;
+    }
+    /**
+     * Getter searchable
+     * @property {string|null} searchable
+     */
+    get searchable() {
+        return this._searchable;
+    }
+    get listTemplate() {
+        return this._listTemplate;
+    }
+    /**
+     * Setter Searchable
+     * @param {boolean} val
+     */
+    set searchable(val) {
+        if (val !== this.searchable) {
+            this._searchable = val;
+            super.updateVisibility('searchControl', this.searchable);
+        }
+    }
+    /**
+     * Getter Pageable
+     * @property {string|null} pageable
+     */
+    get pageable() {
+        return this._pageable;
+    }
+    /**
+     * Setter Pageable
+     * @param {boolean} val
+     */
+    set pageable(val) {
+        if (val !== this.pageable) {
+            this._pageable = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Getter pagesize
+     * @property {int} pagesize
+     * @return {int}
+     */
+    get pagesize() {
+        return this._pagesize;
+    }
+    /**
+     * Setter Pagesize
+     * @param {int} val
+     */
+    set pagesize(val) {
+        if (val !== this.pagesize) {
+            this._pagesize = val;
+            this._setMaxPage(this._objects.length);
+        }
+    }
+    /**
+     * Getter CurrentPage
+     * @property {int} page
+     * @return {int}
+     */
+    get page() {
+        return this._page;
+    }
+    /**
+     * Setter CurrentPage
+     * @param {int} val
+     */
+    set page(val) {
+        if (val !== this.page && val <= this.maxPage) {
+            this._page = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Getter MaxPage
+     * @property {int} maxPage
+     * @return {int}
+     */
+    get maxPage() {
+        return this._maxPage;
+    }
+    /**
+     * Setter MaxPage
+     * @param {int} val
+     */
+    set maxPage(val) {
+        if (val !== this.maxPage) {
+            this._maxPage = val;
+            this._updatePager();
+        }
+    }
+    /**
+     * Connected Callback
+     */
+    connectedCallback() {
+        super.connectedCallback();
+        this._addSearchFieldListener();
+        this._filterObjects();
+        this._updatePager();
+        this._addPagerListener();
+    }
+    /**
+     * Attach Data to List
+     * @param {Array} data
+     * @param {string} searchValue
+     * @param {boolean} clear
+     */
+    attachData(data, searchValue, clear = false) {
+        if (clear) {
+            this.shadowRoot.getElementById('listElements').innerHTML = '';
+        }
+        data.forEach((element) => this._attachToList(element, searchValue));
+        this._objects = data;
+    }
+    /**
+     * Search for a string
+     * @param {string} searchString
+     */
+    search(searchString) {
+        this._filterObjects(searchString);
+    }
+    // -----------------
+    // PRIVATE METHODS
+    // -----------------
+    /**
+     * Adding PageListener
+     * @private
+     */
+    _addPagerListener() {
+        if (this._pager) {
+            this._pager.addEventListener('change', (event) => {
+                this.page = event.target.page;
+                this._filterObjects();
+            });
+        }
+    }
+    /**
+     * Input in search has Changed
+     * @private
+     */
+    _addSearchFieldListener() {
+        if (this.shadowRoot) {
+            let searchTimer;
+            let value = null;
+            const searchField = this.shadowRoot.querySelector('#search');
+            searchField.addEventListener('keyup', (event) => {
+                let target = event.target;
+                if (value != target.value) {
+                    clearTimeout(searchTimer);
+                    value = target.value;
+                    searchTimer = setTimeout((_) => {
+                        this.search(value);
+                    }, 300);
+                }
+            });
+            this.updateVisibility('searchControl', this.searchable);
+        }
+    }
+    /**
+     * Updating Pager
+     */
+    _updatePager() {
+        if (this.shadowRoot) {
+            this.updateVisibility(this._pager.id, this.pageable);
+            this._pager.page = this.page;
+            this._pager.maximum = this.maxPage;
+        }
+    }
+    /**
+     * GET Pager Element
+     * @return {VetproviehPager}
+     * @private
+     */
+    get _pager() {
+        return this.shadowRoot.getElementById('pager');
+    }
+    /**
+     * Can component fetch new data?
+     * @private
+     */
+    get _readyToFetch() {
+        return this.pagesize && this.repository && this.shadowRoot;
+    }
+    /**
+     * Loading Data from Remote-Server
+     * @param {string | undefined} searchValue
+     * @private
+     */
+    _filterObjects(searchValue = undefined) {
+        if (this._readyToFetch) {
+            const self = this;
+            this.repository.where(searchValue)
+                .then((data) => this._sort(data))
+                .then((data) => { self._setMaxPage(data.length); return data; })
+                .then((data) => self._filterByPage(data))
+                .then((data) => self.attachData(data, searchValue, true));
+        }
+    }
+    /**
+     * Sorting Data. can be overwritten
+     * @param data
+     */
+    _sort(data) {
+        return data;
+    }
+    /**
+     * Set Max-Page by lenth of data
+     * @param {number} dataLength
+     * @return {boolean}
+     */
+    _setMaxPage(dataLength) {
+        this.maxPage = Math.ceil(dataLength / this.pagesize);
+        return true;
+    }
+    /**
+     * Inserts Element to List
+     * @param {object} element
+     * @param {string} searchValue
+     * @private
+     */
+    _attachToList(element, searchValue) {
+        if (this.shadowRoot) {
+            const list = this.shadowRoot.getElementById('listElements');
+            if (list) {
+                const newListItem = new ListItem(this, element);
+                newListItem.mark(searchValue);
+                list.appendChild(newListItem);
+            }
+        }
+    }
+    /**
+     * Filter Data by Page
+     * @param {Array} data
+     * @param {number} currentPage
+     * @param {number} pageSize
+     * @return {Array}
+     * @private
+     */
+    _filterByPage(data) {
+        return data.slice((this.page - 1) * this.pagesize, this.page * this.pagesize);
+    }
+}
 
 /**
  * Helper to get and set Attributes on Objects
@@ -668,14 +1027,15 @@ class VetproviehElement$1 extends HTMLElement {
     get template() {
         return '';
     }
-    constructor(shadowed = true) {
+    constructor(shadowed = true, render = true) {
         super();
         if (shadowed) {
             this.attachShadow({
                 mode: 'open',
             });
         }
-        this.render();
+        if (render)
+            this.render();
     }
     /**
        * Callback Implementation
@@ -737,6 +1097,9 @@ class VetproviehElement$1 extends HTMLElement {
             }
         }
     }
+    get innerHTML() {
+        return super.innerHTML;
+    }
     set innerHTML(input) {
         if (this.shadowRoot != null) {
             this.shadowRoot.innerHTML = input;
@@ -762,13 +1125,13 @@ class VetproviehElement$1 extends HTMLElement {
  * Repeats Template Element. Amount is set by the amount of objects
  * inside
  */
-class VetproviehRepeat$1 extends VetproviehElement$1 {
+class VetproviehBasicRepeat$1 extends VetproviehElement$1 {
     /**
      * Default-Contructor
      * @param {HTMLTemplateElement} pListTemplate
      */
-    constructor(pListTemplate = undefined) {
-        super();
+    constructor(pListTemplate = undefined, shadowed = true) {
+        super(shadowed);
         this._objects = [];
         this._orderBy = '+position';
         const listTemplate = pListTemplate || this.querySelector('template');
@@ -778,13 +1141,6 @@ class VetproviehRepeat$1 extends VetproviehElement$1 {
         else {
             this._listTemplate = new DocumentFragment();
         }
-    }
-    /**
-        * Getting View Template
-        * @return {string}
-        */
-    static get template() {
-        return VetproviehElement$1.template + `<div id="listElements"></div>`;
     }
     /**
          * Getting observed Attributes
@@ -833,7 +1189,7 @@ class VetproviehRepeat$1 extends VetproviehElement$1 {
     * Connected Callback
     */
     connectedCallback() {
-        this._initalizeShadowRoot(VetproviehRepeat$1.template);
+        this._initalizeShadowRoot(VetproviehBasicRepeat$1.template);
         this.renderList();
     }
     /**
@@ -941,171 +1297,281 @@ class VetproviehRepeat$1 extends VetproviehElement$1 {
         }
     }
 }
-if (!customElements.get('vp-repeat')) {
-    customElements.define('vp-repeat', VetproviehRepeat$1);
+
+function WebComponent$1(webComponentArgs) {
+    /**
+       * Defining Tag for HTML-Component
+       * @param {any} constructor
+       * @param {string} tagName
+       */
+    const defineTag = (constructor, tagName, extendElement) => {
+        if (!customElements.get(tagName)) {
+            if (extendElement) {
+                customElements.define(tagName, constructor, { extends: extendElement });
+            }
+            else {
+                customElements.define(tagName, constructor);
+            }
+        }
+    };
+    return function (constructorFunction) {
+        /**
+             * Building Wrapper Function for new Constructor
+             * @param args
+             */
+        const newConstructorFunction = function (...args) {
+            const func = function () {
+                return new constructorFunction(...args);
+            };
+            func.prototype = constructorFunction.prototype;
+            const result = new func();
+            return result;
+        };
+        newConstructorFunction.prototype = constructorFunction.prototype;
+        if (webComponentArgs.template) {
+            Object.defineProperty(newConstructorFunction.prototype, 'template', {
+                get: () => webComponentArgs.template || "",
+            });
+        }
+        defineTag(constructorFunction, webComponentArgs.tag, webComponentArgs.extends);
+        return newConstructorFunction;
+    };
 }
+
+/**
+ * Repeats Template Element. Amount is set by the amount of objects
+ * inside
+ */
+let VetproviehRepeat$1 = /** @class */ (() => {
+    let VetproviehRepeat = class VetproviehRepeat extends VetproviehBasicRepeat$1 {
+    };
+    VetproviehRepeat = __decorate([
+        WebComponent$1({
+            template: VetproviehElement$1.template + `<div id="listElements"></div>`,
+            tag: "vp-repeat"
+        })
+    ], VetproviehRepeat);
+    return VetproviehRepeat;
+})();
+
+let VetproviehTable$1 = /** @class */ (() => {
+    let VetproviehTable = class VetproviehTable extends VetproviehBasicRepeat$1 {
+        /**
+         * Inserts Element to List
+         * @param {any} dataItem
+         * @param {index} number
+         * @private
+         */
+        _attachToList(dataItem, index = 0) {
+            if (this.shadowRoot) {
+                const newListItem = this._generateListItem(dataItem);
+                dataItem['index'] = index;
+                ViewHelper$1.replacePlaceholders(newListItem, dataItem);
+                this._attachParamsToLink(newListItem, dataItem);
+                const list = this.list;
+                if (list) {
+                    list.appendChild(newListItem.children[0]);
+                }
+            }
+        }
+        _attachParamsToLink(newListItem, dataItem) {
+            let a = newListItem.getElementsByTagName("a")[0];
+            if (a) {
+                a.params = dataItem;
+            }
+        }
+        /**
+       * Generate new Item for List which is based on the template
+       * @param {any} dataItem
+       * @param {boolean} activatedEventListener
+       * @return {HTMLDivElement}
+       * @private
+       */
+        _generateListItem(dataItem, activatedEventListener = false) {
+            const newNode = document.importNode(this._listTemplate, true);
+            const div = document.createElement('tbody');
+            div.appendChild(newNode);
+            return div;
+        }
+    };
+    VetproviehTable = __decorate([
+        WebComponent$1({
+            template: VetproviehElement$1.template + `
+        <table class="table">
+          <thead>
+          </thead>
+          <tbody id="listElements">
+          </tbody>
+        </table>
+    `,
+            tag: "vp-table"
+        })
+    ], VetproviehTable);
+    return VetproviehTable;
+})();
 
 /**
  * Paging Class
  */
-class VetproviehPager extends VetproviehElement$1 {
-    constructor() {
-        super(...arguments);
-        this._properties = {
-            page: 1,
-            maximum: 1,
-        };
-    }
-    /**
-     * Observed Attributes
-     * @return {Array<string>}
-     */
-    static get observedAttributes() {
-        return ['page', 'maximum'];
-    }
-    /**
-     * Template for Pager
-     * @return {string}
-     */
-    static get template() {
-        return super.template + `
-        <style>
-          :host {
-            display: block;
-          }
-        </style>
-        <nav class="pagination is-centered is-small" role="navigation" 
-             aria-label="pagination">
-          <ul id="pager" class="pagination-list">
-          </ul>
-        </nav>`;
-    }
-    /**
-     * Page Getter
-     * @property {number|null} page
-     */
-    get page() {
-        return this._properties.page;
-    }
-    /**
-     * Setting page
-     * @param {number} val
-     */
-    set page(val) {
-        if (typeof (val) === 'string')
-            val = parseInt(val);
-        if (val !== this.page && val <= this.maximum && val > 0) {
-            this._properties.page = val;
-            this._updateRendering();
+let VetproviehPager = /** @class */ (() => {
+    let VetproviehPager = class VetproviehPager extends VetproviehElement$1 {
+        constructor() {
+            super(...arguments);
+            this._page = 1;
+            this._maximum = 1;
         }
-    }
-    /**
-     * @property {number|null} maximum
-     */
-    get maximum() {
-        return this._properties.maximum;
-    }
-    /**
-     * Setting Maximum
-     * @param {number} val
-     */
-    set maximum(val) {
-        if (val !== this.maximum) {
-            this._properties.maximum = val;
-            this._updateRendering();
+        /**
+         * Observed Attributes
+         * @return {Array<string>}
+         */
+        static get observedAttributes() {
+            return ['page', 'maximum'];
         }
-    }
-    /**
-     * Render Pages for Pager
-     * @private
-     */
-    _renderPages() {
-        const pager = this.getByIdFromShadowRoot('pager');
-        pager.appendChild(this._renderPage(1));
-        this._addBlankPage(pager, this.page > 3);
-        for (let i = -1; i < 2; i++) {
-            const toDisplayPage = this.page + i;
-            if (toDisplayPage > 1 && toDisplayPage < this.maximum) {
-                pager.appendChild(this._renderPage(toDisplayPage));
+        static hello() {
+            return "HELLO";
+        }
+        /**
+         * Page Getter
+         * @property {number|null} page
+         */
+        get page() {
+            return this._page;
+        }
+        /**
+         * Setting page
+         * @param {number} val
+         */
+        set page(val) {
+            if (typeof (val) === 'string')
+                val = parseInt(val);
+            if (val !== this.page && val <= this.maximum && val > 0) {
+                this._page = val;
+                this.render();
             }
         }
-        this._addBlankPage(pager, this.page < this.maximum - 2);
-        if (this.maximum != 1) {
-            pager.appendChild(this._renderPage(this.maximum));
+        /**
+         * @property {number|null} maximum
+         */
+        get maximum() {
+            return this._maximum;
         }
-    }
-    /**
-     * render Page placeholder
-     * @param {HTMLElement} pager
-     * @param {boolean} show
-     * @private
-     */
-    _addBlankPage(pager, show) {
-        if (show) {
-            const li = document.createElement('li');
-            const span = document.createElement('span');
-            span.classList.add('pagination-ellipsis');
-            span.innerHTML = '&hellip;';
-            li.appendChild(span);
-            pager.appendChild(li);
+        /**
+         * Setting Maximum
+         * @param {number} val
+         */
+        set maximum(val) {
+            if (val !== this.maximum && val !== undefined) {
+                this._maximum = val;
+                this.render();
+            }
         }
-    }
-    /**
-     * Render Single page Button
-     * @param {number} page
-     * @return {HTMLLIElement} Element
-     * @private
-     */
-    _renderPage(page) {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.classList.add('pagination-link');
-        if (page === this.page) {
-            a.classList.add('is-current');
-        }
-        a.onclick = (event) => this._pageClickedEvent(this, event);
-        a.title = 'Open Page #' + this.page;
-        const linkText = document.createTextNode(page.toString());
-        a.appendChild(linkText);
-        li.appendChild(a);
-        return li;
-    }
-    /**
-     * Page-Button has been clicked
-     * @param {VetproviehPager} pager
-     * @param {Event} event
-     * @private
-     */
-    _pageClickedEvent(pager, event) {
-        pager.page = parseInt(event.target.innerText);
-        pager.dispatchEvent(new Event('change'));
-    }
-    /**
-     * Connected Callback
-     */
-    connectedCallback() {
-        // Lazy creation of shadowRoot.
-        if (!this.shadowRoot) {
-            this.attachShadow({
-                mode: 'open',
-            }).innerHTML = VetproviehPager.template;
-        }
-        this._updateRendering();
-    }
-    /**
-     * @private
-     */
-    _updateRendering() {
-        if (this.shadowRoot) {
+        /**
+         * Render Pages for Pager
+         * @private
+         */
+        renderPages() {
             const pager = this.getByIdFromShadowRoot('pager');
-            pager.innerHTML = '';
-            this._renderPages();
+            pager.appendChild(this.renderPage(1));
+            this._addBlankPage(pager, this.page > 3);
+            for (let i = -1; i < 2; i++) {
+                const toDisplayPage = this.page + i;
+                if (toDisplayPage > 1 && toDisplayPage < this.maximum) {
+                    pager.appendChild(this.renderPage(toDisplayPage));
+                }
+            }
+            this._addBlankPage(pager, this.page < this.maximum - 2);
+            if (this.maximum != 1 && this.maximum) {
+                pager.appendChild(this.renderPage(this.maximum));
+            }
         }
+        /**
+         * render Page placeholder
+         * @param {HTMLElement} pager
+         * @param {boolean} show
+         * @private
+         */
+        _addBlankPage(pager, show) {
+            if (show) {
+                const li = document.createElement('li');
+                const span = document.createElement('span');
+                span.classList.add('pagination-ellipsis');
+                span.innerHTML = '&hellip;';
+                li.appendChild(span);
+                pager.appendChild(li);
+            }
+        }
+        /**
+         * Render Single page Button
+         * @param {number} page
+         * @return {HTMLLIElement} Element
+         * @private
+         */
+        renderPage(page) {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.classList.add('pagination-link');
+            if (page === this.page) {
+                a.classList.add('is-current');
+            }
+            a.onclick = (event) => this._pageClickedEvent(this, event);
+            a.title = 'Open Page #' + this.page;
+            const linkText = document.createTextNode(page.toString());
+            a.appendChild(linkText);
+            li.appendChild(a);
+            return li;
+        }
+        /**
+         * Page-Button has been clicked
+         * @param {VetproviehPager} pager
+         * @param {Event} event
+         * @private
+         */
+        _pageClickedEvent(pager, event) {
+            pager.page = parseInt(event.target.innerText);
+            pager.dispatchEvent(new Event('change'));
+        }
+        /**
+         * Connected Callback
+         */
+        connectedCallback() {
+            // Lazy creation of shadowRoot.
+            if (!this.shadowRoot) {
+                this.attachShadow({
+                    mode: 'open',
+                }).innerHTML = this.template;
+            }
+            this.render();
+        }
+        /**
+         * @private
+         */
+        render() {
+            if (this.shadowRoot) {
+                super.render();
+                const pager = this.getByIdFromShadowRoot('pager');
+                pager.innerHTML = '';
+                this.renderPages();
+            }
+        }
+    };
+    VetproviehPager = __decorate([
+        WebComponent$1({
+            template: VetproviehElement$1.template + `
+  <style>
+    :host {
+      display: block;
     }
-}
-if (!customElements.get('vetprovieh-pager')) {
-    customElements.define('vetprovieh-pager', VetproviehPager);
-}
+  </style>
+  <nav class="pagination is-centered is-small" role="navigation" 
+       aria-label="pagination">
+    <ul id="pager" class="pagination-list">
+    </ul>
+  </nav>`,
+            tag: 'vetprovieh-pager'
+        })
+    ], VetproviehPager);
+    return VetproviehPager;
+})();
 
 /**
  * List Element for Vet:Provieh
@@ -1115,286 +1581,7 @@ if (!customElements.get('vetprovieh-pager')) {
  * @property {string} src
  */
 let VetproviehList = /** @class */ (() => {
-    var _a;
-    let VetproviehList = class VetproviehList extends VetproviehElement {
-        /**
-         * Default Constructor
-         * accepts a template as parameter
-         * @param {HTMLTemplateElement} pListTemplate
-         */
-        constructor(pListTemplate = undefined) {
-            super();
-            this._pagesize = 0;
-            this._searchable = true;
-            this._pageable = true;
-            this._page = 1;
-            this._maxPage = 1;
-            this._objects = [];
-            const listTemplate = pListTemplate || this.querySelector('template');
-            if (listTemplate) {
-                this._listTemplate = listTemplate.content;
-            }
-        }
-        /**
-         * Getting observed Attributes
-         * @return {string[]}
-         */
-        static get observedAttributes() {
-            return ['pagesize', 'searchable', 'pageable'];
-        }
-        get repository() {
-            return this._repository;
-        }
-        set repository(val) {
-            if (this._repository != val) {
-                this._repository = val;
-                this._filterObjects();
-            }
-        }
-        get objects() {
-            return this._objects;
-        }
-        /**
-         * Getter searchable
-         * @property {string|null} searchable
-         */
-        get searchable() {
-            return this._searchable;
-        }
-        get listTemplate() {
-            return this._listTemplate;
-        }
-        /**
-         * Setter Searchable
-         * @param {boolean} val
-         */
-        set searchable(val) {
-            if (val !== this.searchable) {
-                this._searchable = val;
-                super.updateVisibility('searchControl', this.searchable);
-            }
-        }
-        /**
-         * Getter Pageable
-         * @property {string|null} pageable
-         */
-        get pageable() {
-            return this._pageable;
-        }
-        /**
-         * Setter Pageable
-         * @param {boolean} val
-         */
-        set pageable(val) {
-            if (val !== this.pageable) {
-                this._pageable = val;
-                this._updatePager();
-            }
-        }
-        /**
-         * Getter pagesize
-         * @property {int} pagesize
-         * @return {int}
-         */
-        get pagesize() {
-            return this._pagesize;
-        }
-        /**
-         * Setter Pagesize
-         * @param {int} val
-         */
-        set pagesize(val) {
-            if (val !== this.pagesize) {
-                this._pagesize = val;
-                this._setMaxPage(this._objects.length);
-            }
-        }
-        /**
-         * Getter CurrentPage
-         * @property {int} page
-         * @return {int}
-         */
-        get page() {
-            return this._page;
-        }
-        /**
-         * Setter CurrentPage
-         * @param {int} val
-         */
-        set page(val) {
-            if (val !== this.page && val <= this.maxPage) {
-                this._page = val;
-                this._updatePager();
-            }
-        }
-        /**
-         * Getter MaxPage
-         * @property {int} maxPage
-         * @return {int}
-         */
-        get maxPage() {
-            return this._maxPage;
-        }
-        /**
-         * Setter MaxPage
-         * @param {int} val
-         */
-        set maxPage(val) {
-            if (val !== this.maxPage) {
-                this._maxPage = val;
-                this._updatePager();
-            }
-        }
-        /**
-         * Connected Callback
-         */
-        connectedCallback() {
-            super.connectedCallback();
-            this._addSearchFieldListener();
-            this._filterObjects();
-            this._updatePager();
-            this._addPagerListener();
-        }
-        /**
-         * Attach Data to List
-         * @param {Array} data
-         * @param {string} searchValue
-         * @param {boolean} clear
-         */
-        attachData(data, searchValue, clear = false) {
-            if (clear) {
-                this.shadowRoot.getElementById('listElements').innerHTML = '';
-            }
-            data.forEach((element) => this._attachToList(element, searchValue));
-            this._objects = data;
-        }
-        /**
-         * Search for a string
-         * @param {string} searchString
-         */
-        search(searchString) {
-            this._filterObjects(searchString);
-        }
-        // -----------------
-        // PRIVATE METHODS
-        // -----------------
-        /**
-         * Adding PageListener
-         * @private
-         */
-        _addPagerListener() {
-            if (this._pager) {
-                this._pager.addEventListener('change', (event) => {
-                    this.page = event.target.page;
-                    this._filterObjects();
-                });
-            }
-        }
-        /**
-         * Input in search has Changed
-         * @private
-         */
-        _addSearchFieldListener() {
-            if (this.shadowRoot) {
-                let searchTimer;
-                let value = null;
-                const searchField = this.shadowRoot.querySelector('#search');
-                searchField.addEventListener('keyup', (event) => {
-                    let target = event.target;
-                    if (value != target.value) {
-                        clearTimeout(searchTimer);
-                        value = target.value;
-                        searchTimer = setTimeout((_) => {
-                            this.search(value);
-                        }, 300);
-                    }
-                });
-                this.updateVisibility('searchControl', this.searchable);
-            }
-        }
-        /**
-         * Updating Pager
-         */
-        _updatePager() {
-            if (this.shadowRoot) {
-                this.updateVisibility(this._pager.id, this.pageable);
-                this._pager.page = this.page;
-                this._pager.maximum = this.maxPage;
-            }
-        }
-        /**
-         * GET Pager Element
-         * @return {VetproviehPager}
-         * @private
-         */
-        get _pager() {
-            return this.shadowRoot.getElementById('pager');
-        }
-        /**
-         * Can component fetch new data?
-         * @private
-         */
-        get _readyToFetch() {
-            return this.pagesize && this.repository && this.shadowRoot;
-        }
-        /**
-         * Loading Data from Remote-Server
-         * @param {string | undefined} searchValue
-         * @private
-         */
-        _filterObjects(searchValue = undefined) {
-            if (this._readyToFetch) {
-                const self = this;
-                this.repository.where(searchValue)
-                    .then((data) => this._sort(data))
-                    .then((data) => { self._setMaxPage(data.length); return data; })
-                    .then((data) => self._filterByPage(data))
-                    .then((data) => self.attachData(data, searchValue, true));
-            }
-        }
-        /**
-         * Sorting Data. can be overwritten
-         * @param data
-         */
-        _sort(data) {
-            return data;
-        }
-        /**
-         * Set Max-Page by lenth of data
-         * @param {number} dataLength
-         * @return {boolean}
-         */
-        _setMaxPage(dataLength) {
-            this.maxPage = Math.ceil(dataLength / this.pagesize);
-            return true;
-        }
-        /**
-         * Inserts Element to List
-         * @param {object} element
-         * @param {string} searchValue
-         * @private
-         */
-        _attachToList(element, searchValue) {
-            if (this.shadowRoot) {
-                const list = this.shadowRoot.getElementById('listElements');
-                if (list) {
-                    const newListItem = new ListItem(this, element);
-                    newListItem.mark(searchValue);
-                    list.appendChild(newListItem);
-                }
-            }
-        }
-        /**
-         * Filter Data by Page
-         * @param {Array} data
-         * @param {number} currentPage
-         * @param {number} pageSize
-         * @return {Array}
-         * @private
-         */
-        _filterByPage(data) {
-            return data.slice((this.page - 1) * this.pagesize, this.page * this.pagesize);
-        }
+    let VetproviehList = class VetproviehList extends VetproviehBasicList {
     };
     VetproviehList = __decorate([
         WebComponent({
@@ -1424,8 +1611,7 @@ let VetproviehList = /** @class */ (() => {
                 <vetprovieh-pager id="pager" page="1" maximum="7">
                 </vetprovieh-pager>`,
             tag: "vetprovieh-list"
-        }),
-        __metadata("design:paramtypes", [typeof (_a = typeof HTMLTemplateElement !== "undefined" && HTMLTemplateElement) === "function" ? _a : Object])
+        })
     ], VetproviehList);
     return VetproviehList;
 })();
