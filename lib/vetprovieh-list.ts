@@ -38,4 +38,5 @@ export { VetproviehPager } from "@tomuench/vetprovieh-pager/lib";
     tag: "vetprovieh-list"
 })
 export class VetproviehList extends VetproviehBasicList {
+  
 }

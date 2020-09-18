@@ -53,8 +53,12 @@ export class VetproviehBasicList extends VetproviehElement {
         super();
 
         const listTemplate = pListTemplate || this.querySelector('template');
-        if (listTemplate) {
-            this._listTemplate = listTemplate.content;
+        this.setlistTemplate(listTemplate);
+    }
+
+    public setlistTemplate(template:HTMLTemplateElement){
+        if (template && this._listTemplate !== template.content) {
+            this._listTemplate = template.content;
         }
     }
 
@@ -185,6 +189,7 @@ export class VetproviehBasicList extends VetproviehElement {
         }
         data.forEach((element) => this._attachToList(element, searchValue));
         this._objects = data;
+        this.dispatchEvent(new Event("loaded"));
     }
 
     /**
@@ -310,6 +315,9 @@ export class VetproviehBasicList extends VetproviehElement {
             const list: HTMLElement | null = this.shadowRoot.getElementById('listElements');
             if (list) {
                 const newListItem: ListItem = new ListItem(this, element);
+                newListItem.addEventListener("selected",(event) => {
+                    this.dispatchEvent(event);
+                })
                 newListItem.mark(searchValue);
                 list.appendChild(newListItem);
             }
