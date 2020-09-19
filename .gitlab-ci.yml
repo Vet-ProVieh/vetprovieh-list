@@ -13,10 +13,10 @@ before_script:
 build:
   stage: build
   script:
-     - \[ -d "../vetprovieh-shared/" ] && rm -R ../vetprovieh-shared/
-     - git clone https://tomuench:${CI_JOB_TOKEN}@gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-shared ../vetprovieh-shared
-     - \[ -d "../vetprovieh-pager/" ] && rm -R ../vetprovieh-pager/
-     - git clone https://tomuench:${CI_JOB_TOKEN}@gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-pager ../vetprovieh-pager
+    - \[ -d "../vetprovieh-shared/" ] && rm -R ../vetprovieh-shared/
+    - git clone https://tomuench:${CI_JOB_TOKEN}@gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-shared ../vetprovieh-shared
+    - \[ -d "../vetprovieh-pager/" ] && rm -R ../vetprovieh-pager/
+    - git clone https://tomuench:${CI_JOB_TOKEN}@gitlab.edvsz.hs-osnabrueck.de/vetprovieh/core/web-application/vetprovieh-pager ../vetprovieh-pager
     - npm install
 
 test:
