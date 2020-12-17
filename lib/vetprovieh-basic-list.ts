@@ -1,5 +1,5 @@
 import { VetproviehPager } from "@tomuench/vetprovieh-pager/lib";
-import { VetproviehElement, IRepository } from "@tomuench/vetprovieh-shared/lib/index";
+import { VetproviehElement, IRepository, BaseRepository } from "@tomuench/vetprovieh-shared/lib/index";
 import { ListItem } from "./list-item";
 
 /**
@@ -29,6 +29,8 @@ export class VetproviehBasicList extends VetproviehElement {
     private _objects: any[] = [];
     private _repository: IRepository<any> | undefined;
 
+    private _urlSearchParams : { [Identifier: string]: string } = {};
+
     public get repository(){
         return this._repository;
     }
@@ -42,6 +44,12 @@ export class VetproviehBasicList extends VetproviehElement {
 
     public get objects() {
         return this._objects;
+    }
+
+    public set urlSearchParams(params: { [Identifier: string]: string }){
+        if(params !== this._urlSearchParams){
+            this._urlSearchParams = params;
+        }
     }
 
     /**
@@ -276,9 +284,16 @@ export class VetproviehBasicList extends VetproviehElement {
     _filterObjects(searchValue: string | undefined = undefined) {
         if (this._readyToFetch) {
             const self = this;
+            
+            let searchPromise: Promise<any>;
+            if(Object.keys(this._urlSearchParams).length > 0){
+                searchPromise = this.repository.whereByParams(this._urlSearchParams);
+                searchPromise = searchPromise.then((data) => BaseRepository.search(data, searchValue));
+            } else {
+                searchPromise = this.repository.where(searchValue);
+            }
 
-
-            this.repository.where(searchValue)
+                searchPromise
                 .then((data) => this._sort(data))
                 .then((data) => { self._setMaxPage(data.length); return data })
                 .then((data) => self._filterByPage(data))
