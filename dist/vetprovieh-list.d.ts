@@ -13,16 +13,19 @@ export let VetproviehList: {
         _page: number;
         _maxPage: number;
         _objects: any[];
-        _listTemplate: DocumentFragment;
+        _urlSearchParams: {};
         repository: any;
         _repository: any;
         readonly objects: any[];
+        urlSearchParams: any;
+        setlistTemplate(template: any): void;
+        _listTemplate: any;
         /**
          * Getter searchable
          * @property {string|null} searchable
          */
         searchable: boolean;
-        readonly listTemplate: DocumentFragment;
+        readonly listTemplate: any;
         /**
          * Getter Pageable
          * @property {string|null} pageable

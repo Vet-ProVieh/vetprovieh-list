@@ -288,6 +288,16 @@ class VetproviehBasicRepeat extends VetproviehElement {
         return ['objects', 'orderBy'];
     }
     /**
+     * Set List Template and Render
+     * @param {DocumentFragment} val
+     */
+    set listTemplate(val) {
+        if (this._listTemplate !== val) {
+            this._listTemplate = val;
+            this.clearAndRender();
+        }
+    }
+    /**
      * Get objects
      * @return {Array<any>}
      */
@@ -381,10 +391,12 @@ class VetproviehBasicRepeat extends VetproviehElement {
     _attachToList(dataItem, index = 0) {
         if (this.shadowRoot) {
             const newListItem = this._generateListItem(dataItem);
-            dataItem['index'] = index;
+            if (typeof (dataItem) === "object") {
+                dataItem['index'] = index;
+            }
             ViewHelper.replacePlaceholders(newListItem, dataItem);
             const list = this.list;
-            if (list) {
+            if (list && newListItem.children[0]) {
                 list.appendChild(newListItem.children[0]);
             }
         }
@@ -465,6 +477,13 @@ function WebComponent(webComponentArgs) {
             const result = new func();
             return result;
         };
+        let filter = ['length', 'prototype', 'name'];
+        Object.getOwnPropertyNames(constructorFunction)
+            .filter((key) => !filter.includes(key))
+            .forEach((key) => {
+            newConstructorFunction[key] = constructorFunction[key];
+        });
+        newConstructorFunction["observedAttributes"] = constructorFunction["observedAttributes"];
         newConstructorFunction.prototype = constructorFunction.prototype;
         if (webComponentArgs.template) {
             Object.defineProperty(newConstructorFunction.prototype, 'template', {
@@ -475,6 +494,246 @@ function WebComponent(webComponentArgs) {
         return newConstructorFunction;
     };
 }
+
+class BaseModel {
+    /**
+     * Is Model already saved
+     * @return {boolean}
+     */
+    get persisted() {
+        return !!this.id && this.id > 0;
+    }
+    static isPersisted(model) {
+        return !!model.id && model.id > 0;
+    }
+    static get endpoint() {
+        let name = this.prototype.constructor.name;
+        name = name.toLowerCase();
+        return name;
+    }
+}
+
+class BaseRepository {
+    constructor(endpoint) {
+        this._endpoint = "";
+        this._endpoint = BaseRepository._replaceParams(endpoint);
+    }
+    /**
+     * Get Current Endpoint
+     * @return {string}
+     */
+    get endpoint() {
+        return this._endpoint;
+    }
+    /**
+     * Getting All
+     * @returns Promise<T[]>
+     */
+    all() {
+        return fetch(this._endpoint).then((response) => {
+            if (response.status === 404) {
+                return [];
+            }
+            return response.json();
+        });
+    }
+    /**
+     * Searching for a String
+     * @param {string} search
+     * @returns Promise<T[]>
+     */
+    where(search) {
+        return this.all()
+            .then((data) => BaseRepository.search(data, search));
+    }
+    /**
+     * Suche mit Parametern
+     * @param {{ [Identifier: string]: string }} params
+     * @returns Promise<T[]>
+     */
+    whereByParams(params) {
+        return this.all()
+            .then((data) => BaseRepository.searchByKeys(data, params));
+    }
+    /**
+     * Destroy Entity by id
+     * @param {number} id
+     * @return {Promise<boolean>}
+     */
+    destroy(id) {
+        return new Promise((resolve, reject) => {
+            fetch(this.buildEndpointWithId(id), {
+                method: 'DELETE',
+            }).then((response) => {
+                resolve(response.ok);
+            }).catch((error) => {
+                resolve(false);
+            });
+        });
+    }
+    /**
+     * Find a Object by its id
+     * @param {number} id
+     * @return {Promise<T>}
+     */
+    find(id) {
+        return fetch(this.buildEndpointWithId(id))
+            .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+            else {
+                throw Error(response.statusText);
+            }
+        });
+    }
+    /**
+     * Update a Entity in Backend
+     * @param {T extends BaseModel} model
+     * @return {Promise<boolean>}
+     */
+    update(model) {
+        if (BaseModel.isPersisted(model)) {
+            return new Promise((resolve, reject) => {
+                fetch(this.buildEndpointWithId(model.id || 0), {
+                    method: 'Update',
+                    body: JSON.stringify(model)
+                }).then((response) => {
+                    resolve(response.ok);
+                }).catch((response) => {
+                    resolve(false);
+                });
+            });
+        }
+        else {
+            throw new Error("Model is not persisted!");
+        }
+    }
+    /**
+     * Create a new Entity in Backend
+     * @param {T extends BaseModel} model
+     * @return {Promise<boolean>}
+     */
+    create(model) {
+        if (!BaseModel.isPersisted(model)) {
+            return new Promise((resolve, reject) => {
+                fetch(this._endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(model)
+                }).then((response) => {
+                    resolve(response.ok);
+                }).catch((response) => {
+                    resolve(false);
+                });
+            });
+        }
+        else {
+            throw new Error("Model is already persisted!");
+        }
+    }
+    /**
+     * Save automatically decides if a model should be created
+     * or updated. The decision is based on the model id
+     * @param {T extends BaseModel} model
+     * @return {Promise<boolean>}
+     */
+    save(model) {
+        if (model.persisted) {
+            return this.create(model);
+        }
+        else {
+            return this.update(model);
+        }
+    }
+    /**
+     * Build Endpoint relative URL for ID
+     * @param {number} id
+     * @return {string}
+     */
+    buildEndpointWithId(id) {
+        return `${this._endpoint}/${id}`;
+    }
+    /**
+      * Search by Value in Array
+      * @param {Array} data
+      * @param {string | undefined} searchValue
+      * @return {Array}
+      */
+    static search(data, searchValue) {
+        if (searchValue) {
+            return data.filter((e) => {
+                return ObjectHelper.objectToStringDeep(e)
+                    .toLowerCase()
+                    .indexOf(searchValue) >= 0;
+            });
+        }
+        else {
+            return data;
+        }
+    }
+    /**
+     * Search by a Key-Value Pair in Array
+    * @param {Array} data
+    * @param {{[Identifier: string] : string}} search
+    * @return {Array}
+     */
+    static searchByKeys(data, search) {
+        if (search) {
+            return data.filter((e) => {
+                return Object.keys(search).map((searchKey) => {
+                    console.log(ObjectHelper.get(e, searchKey));
+                    return ObjectHelper.get(e, searchKey).toString() === search[searchKey];
+                }).reduce((sum, next) => sum && next, true);
+            });
+        }
+        else {
+            return data;
+        }
+    }
+    /**
+     * Register a Repository
+     * @param {name
+     * @param clazz
+     */
+    static registerRepositoryByName(name, clazz) {
+        let _cls = classes;
+        _cls[name] = clazz;
+    }
+    /**
+     * Getting Repository by name
+     * @param {string} name
+     * @return {BaseRepository<T>}
+     */
+    static getRepositoryByName(name) {
+        let _cls = classes;
+        if (!_cls[name]) {
+            return undefined;
+        }
+        else {
+            let RepositoryClass = _cls[name];
+            return new RepositoryClass();
+        }
+    }
+    /**
+     * Replacing Values with URL-Params
+     * @param {string} val
+     */
+    static _replaceParams(val) {
+        let newSrc = val;
+        let regex = /{{([a-zA-Z0-9]+)}}/;
+        const url = new URL(window.location.href);
+        const matches = newSrc.match(regex);
+        if (matches) {
+            matches.shift();
+            matches.forEach((m) => {
+                newSrc = newSrc.replace("{{" + m + "}}", url.searchParams.get(m) || "");
+            });
+        }
+        return newSrc;
+    }
+}
+// Cache for classes, who already where looked up
+var classes = {};
 
 /**
  * Repeats Template Element. Amount is set by the amount of objects
@@ -619,10 +878,9 @@ class VetproviehBasicList extends VetproviehElement {
         this._page = 1;
         this._maxPage = 1;
         this._objects = [];
+        this._urlSearchParams = {};
         const listTemplate = pListTemplate || this.querySelector('template');
-        if (listTemplate) {
-            this._listTemplate = listTemplate.content;
-        }
+        this.setlistTemplate(listTemplate);
     }
     /**
      * Getting observed Attributes
@@ -642,6 +900,16 @@ class VetproviehBasicList extends VetproviehElement {
     }
     get objects() {
         return this._objects;
+    }
+    set urlSearchParams(params) {
+        if (params !== this._urlSearchParams) {
+            this._urlSearchParams = params;
+        }
+    }
+    setlistTemplate(template) {
+        if (template && this._listTemplate !== template.content) {
+            this._listTemplate = template.content;
+        }
     }
     /**
      * Getter searchable
@@ -756,6 +1024,7 @@ class VetproviehBasicList extends VetproviehElement {
         }
         data.forEach((element) => this._attachToList(element, searchValue));
         this._objects = data;
+        this.dispatchEvent(new Event("loaded"));
     }
     /**
      * Search for a string
@@ -834,7 +1103,15 @@ class VetproviehBasicList extends VetproviehElement {
     _filterObjects(searchValue = undefined) {
         if (this._readyToFetch) {
             const self = this;
-            this.repository.where(searchValue)
+            let searchPromise;
+            if (Object.keys(this._urlSearchParams).length > 0) {
+                searchPromise = this.repository.whereByParams(this._urlSearchParams);
+                searchPromise = searchPromise.then((data) => BaseRepository.search(data, searchValue));
+            }
+            else {
+                searchPromise = this.repository.where(searchValue);
+            }
+            searchPromise
                 .then((data) => this._sort(data))
                 .then((data) => { self._setMaxPage(data.length); return data; })
                 .then((data) => self._filterByPage(data))
@@ -868,6 +1145,9 @@ class VetproviehBasicList extends VetproviehElement {
             const list = this.shadowRoot.getElementById('listElements');
             if (list) {
                 const newListItem = new ListItem(this, element);
+                newListItem.addEventListener("selected", (event) => {
+                    this.dispatchEvent(event);
+                });
                 newListItem.mark(searchValue);
                 list.appendChild(newListItem);
             }
@@ -1150,6 +1430,16 @@ class VetproviehBasicRepeat$1 extends VetproviehElement$1 {
         return ['objects', 'orderBy'];
     }
     /**
+     * Set List Template and Render
+     * @param {DocumentFragment} val
+     */
+    set listTemplate(val) {
+        if (this._listTemplate !== val) {
+            this._listTemplate = val;
+            this.clearAndRender();
+        }
+    }
+    /**
      * Get objects
      * @return {Array<any>}
      */
@@ -1243,10 +1533,12 @@ class VetproviehBasicRepeat$1 extends VetproviehElement$1 {
     _attachToList(dataItem, index = 0) {
         if (this.shadowRoot) {
             const newListItem = this._generateListItem(dataItem);
-            dataItem['index'] = index;
+            if (typeof (dataItem) === "object") {
+                dataItem['index'] = index;
+            }
             ViewHelper$1.replacePlaceholders(newListItem, dataItem);
             const list = this.list;
-            if (list) {
+            if (list && newListItem.children[0]) {
                 list.appendChild(newListItem.children[0]);
             }
         }
@@ -1327,6 +1619,13 @@ function WebComponent$1(webComponentArgs) {
             const result = new func();
             return result;
         };
+        let filter = ['length', 'prototype', 'name'];
+        Object.getOwnPropertyNames(constructorFunction)
+            .filter((key) => !filter.includes(key))
+            .forEach((key) => {
+            newConstructorFunction[key] = constructorFunction[key];
+        });
+        newConstructorFunction["observedAttributes"] = constructorFunction["observedAttributes"];
         newConstructorFunction.prototype = constructorFunction.prototype;
         if (webComponentArgs.template) {
             Object.defineProperty(newConstructorFunction.prototype, 'template', {
