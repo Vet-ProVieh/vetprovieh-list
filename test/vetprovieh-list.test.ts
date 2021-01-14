@@ -3,7 +3,6 @@ import fetch from 'jest-fetch-mock';
 enableFetchMocks();
 
 import { VetproviehList } from "../lib/vetprovieh-list";
-import { VetproviehPager } from '@tomuench/vetprovieh-pager/lib/vetprovieh-pager';
 import { Indexable } from '@tomuench/vetprovieh-shared/lib/interfaces/indexable';
 import { PersonRepository } from './mockups/personRepository';
 
@@ -172,7 +171,7 @@ describe('page', () => {
     });
 
     test("pageListener should switch page", () => {
-        let pager = list.getByIdFromShadowRoot("pager") as VetproviehPager;
+        let pager = list.getByIdFromShadowRoot("pager") as any;
         pager.page = 2;
         pager.dispatchEvent(new Event("change"));
 
