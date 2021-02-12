@@ -24,7 +24,7 @@ export class VetproviehBasicList extends VetproviehElement {
     private _pageable: boolean = true;
     private _page: number = 1;
     private _maxPage: number = 1;
-    private _listTemplate: DocumentFragment;
+    protected _listTemplate: DocumentFragment;
 
     private _objects: any[] = [];
     private _repository: IRepository<any> | undefined;
