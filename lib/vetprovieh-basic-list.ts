@@ -88,7 +88,7 @@ export class VetproviehBasicList extends VetproviehElement {
      */
     set searchable(val) {
         if (val !== this.searchable) {
-            this._searchable = val;
+            this._searchable = val === true || (val as any) === "true";
             super.updateVisibility('searchControl', this.searchable);
         }
     }
@@ -107,7 +107,7 @@ export class VetproviehBasicList extends VetproviehElement {
      */
     set pageable(val) {
         if (val !== this.pageable) {
-            this._pageable = val;
+            this._pageable = val === true || (val as any) === "true";;
             this._updatePager();
         }
     }
@@ -192,12 +192,17 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {boolean} clear
      */
     attachData(data, searchValue, clear = false) {
+        let listElements = this.shadowRoot.getElementById('listElements');
         if (clear) {
-            this.shadowRoot.getElementById('listElements').innerHTML = '';
+            listElements.innerHTML = '';
         }
         data.forEach((element) => this._attachToList(element, searchValue));
         this._objects = data;
         this.dispatchEvent(new Event("loaded"));
+
+        if(listElements.innerHTML == ''){
+            listElements.innerHTML = "<p> Keine Daten zur Anzeige gefunden. </p";
+        }
     }
 
     /**

@@ -39,8 +39,8 @@ export class ListItem extends HTMLElement {
      * @private
      */
     private _attachDataToStoreLocalLink(){
-        const link = this.getElementsByTagName("a")[0] as Indexable;
-        if (link && link.attributes["is"] && link.attributes["is"].value === "local-store") {
+        const link = this.getElementsByTagName("store-local-link")[0] as Indexable;
+        if (link) {
             link.params = this._data;
         }
     }
