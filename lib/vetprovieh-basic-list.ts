@@ -24,19 +24,19 @@ export class VetproviehBasicList extends VetproviehElement {
     private _pageable: boolean = true;
     private _page: number = 1;
     private _maxPage: number = 1;
-    protected _listTemplate: DocumentFragment;
+    protected _listTemplate: DocumentFragment | undefined;
 
     private _objects: any[] = [];
     private _repository: IRepository<any> | undefined;
 
-    private _urlSearchParams : { [Identifier: string]: string } = {};
+    private _urlSearchParams: { [Identifier: string]: string } = {};
 
-    public get repository(){
+    public get repository() {
         return this._repository;
     }
 
     public set repository(val) {
-        if(this._repository != val){
+        if (this._repository != val) {
             this._repository = val;
             this._filterObjects();
         }
@@ -46,8 +46,8 @@ export class VetproviehBasicList extends VetproviehElement {
         return this._objects;
     }
 
-    public set urlSearchParams(params: { [Identifier: string]: string }){
-        if(params !== this._urlSearchParams){
+    public set urlSearchParams(params: { [Identifier: string]: string }) {
+        if (params !== this._urlSearchParams) {
             this._urlSearchParams = params;
         }
     }
@@ -61,10 +61,12 @@ export class VetproviehBasicList extends VetproviehElement {
         super();
 
         const listTemplate = pListTemplate || this.querySelector('template');
-        this.setlistTemplate(listTemplate);
+        if (listTemplate) {
+            this.setlistTemplate(listTemplate);
+        }
     }
 
-    public setlistTemplate(template:HTMLTemplateElement){
+    public setlistTemplate(template: HTMLTemplateElement) {
         if (template && this._listTemplate !== template.content) {
             this._listTemplate = template.content;
         }
@@ -191,16 +193,16 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {string} searchValue
      * @param {boolean} clear
      */
-    attachData(data, searchValue, clear = false) {
-        let listElements = this.shadowRoot.getElementById('listElements');
-        if (clear) {
+    attachData(data: any, searchValue: any, clear: boolean = false) {
+        let listElements = this.shadowRoot?.getElementById('listElements');
+        if (clear && listElements) {
             listElements.innerHTML = '';
         }
-        data.forEach((element) => this._attachToList(element, searchValue));
+        data.forEach((element: any) => this._attachToList(element, searchValue));
         this._objects = data;
         this.dispatchEvent(new Event("loaded"));
 
-        if(listElements.innerHTML == ''){
+        if (listElements?.innerHTML == '') {
             listElements.innerHTML = "<p> Keine Daten zur Anzeige gefunden. </p";
         }
     }
@@ -236,20 +238,22 @@ export class VetproviehBasicList extends VetproviehElement {
      */
     _addSearchFieldListener() {
         if (this.shadowRoot) {
-            let searchTimer;
-            let value = null;
-            const searchField = this.shadowRoot.querySelector('#search');
-            searchField.addEventListener('keyup', (event) => {
-                let target = event.target as HTMLInputElement
-                if (value != target.value) {
-                    clearTimeout(searchTimer);
-                    value = target.value;
-                    searchTimer = setTimeout((_) => {
-                        this.search(value);
-                    }, 300);
-                }
-            });
-            this.updateVisibility('searchControl', this.searchable);
+            let searchTimer: any;
+            let value: any = null;
+            const searchField = this.shadowRoot?.querySelector('#search');
+            if (searchField) {
+                searchField.addEventListener('keyup', (event) => {
+                    let target = event.target as HTMLInputElement
+                    if (value != target.value) {
+                        clearTimeout(searchTimer);
+                        value = target.value;
+                        searchTimer = setTimeout((_) => {
+                            this.search(value);
+                        }, 300);
+                    }
+                });
+                this.updateVisibility('searchControl', this.searchable);
+            }
         }
     }
 
@@ -270,7 +274,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * @private
      */
     get _pager(): VetproviehPager {
-        return this.shadowRoot.getElementById('pager') as VetproviehPager;
+        return this.shadowRoot?.getElementById('pager') as VetproviehPager;
     }
 
     /**
@@ -289,20 +293,22 @@ export class VetproviehBasicList extends VetproviehElement {
     _filterObjects(searchValue: string | undefined = undefined) {
         if (this._readyToFetch) {
             const self = this;
-            
+
             let searchPromise: Promise<any>;
-            if(Object.keys(this._urlSearchParams).length > 0){
-                searchPromise = this.repository.whereByParams(this._urlSearchParams);
-                searchPromise = searchPromise.then((data) => BaseRepository.search(data, searchValue));
-            } else {
-                searchPromise = this.repository.where(searchValue);
-            }
+            if (this.repository) {
+                if (Object.keys(this._urlSearchParams).length > 0) {
+                    searchPromise = this.repository.whereByParams(this._urlSearchParams);
+                    searchPromise = searchPromise.then((data) => BaseRepository.search(data, searchValue));
+                } else {
+                    searchPromise = this.repository.where(searchValue);
+                }
 
                 searchPromise
-                .then((data) => this._sort(data))
-                .then((data) => { self._setMaxPage(data.length); return data })
-                .then((data) => self._filterByPage(data))
-                .then((data) => self.attachData(data, searchValue, true));
+                    .then((data) => this._sort(data))
+                    .then((data) => { self._setMaxPage(data.length); return data })
+                    .then((data) => self._filterByPage(data))
+                    .then((data) => self.attachData(data, searchValue, true));
+            }
         }
     }
 
@@ -310,7 +316,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * Sorting Data. can be overwritten
      * @param data 
      */
-    protected _sort(data) {
+    protected _sort(data: any) {
         return data;
     }
 
@@ -330,12 +336,12 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {string} searchValue
      * @private
      */
-    _attachToList(element, searchValue) {
+    _attachToList(element: any, searchValue: any) {
         if (this.shadowRoot) {
             const list: HTMLElement | null = this.shadowRoot.getElementById('listElements');
             if (list) {
                 const newListItem: ListItem = new ListItem(this, element);
-                newListItem.addEventListener("selected",(event) => {
+                newListItem.addEventListener("selected", (event) => {
                     this.dispatchEvent(event);
                 })
                 newListItem.mark(searchValue);
