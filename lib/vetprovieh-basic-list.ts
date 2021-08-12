@@ -342,7 +342,7 @@ export class VetproviehBasicList extends VetproviehElement {
             if (list) {
                 const newListItem: ListItem = new ListItem(this, element);
                 newListItem.addEventListener("selected", (event) => {
-                    this.elementSelected(event);
+                    this.elementSelected(event as CustomEvent);
                 })
                 newListItem.mark(searchValue);
                 list.appendChild(newListItem);
@@ -350,8 +350,8 @@ export class VetproviehBasicList extends VetproviehElement {
         }
     }
 
-    protected elementSelected(event:any) {
-        this.dispatchEvent(new CustomEvent("selected"));
+    protected elementSelected(event:CustomEvent) {
+        this.dispatchEvent(new CustomEvent("selected",{ detail: event.detail}));
     }
 
 
