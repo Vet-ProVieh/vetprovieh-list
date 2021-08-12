@@ -342,12 +342,16 @@ export class VetproviehBasicList extends VetproviehElement {
             if (list) {
                 const newListItem: ListItem = new ListItem(this, element);
                 newListItem.addEventListener("selected", (event) => {
-                    this.dispatchEvent(event);
+                    this.elementSelected(event);
                 })
                 newListItem.mark(searchValue);
                 list.appendChild(newListItem);
             }
         }
+    }
+
+    protected elementSelected(event:any) {
+        this.dispatchEvent(new CustomEvent("selected"));
     }
 
 

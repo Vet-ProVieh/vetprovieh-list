@@ -28,7 +28,8 @@ export class ListItem extends HTMLElement {
         this.addEventListener(event, (event) => {
             const selectedEvent = new Event('selected');
             (selectedEvent as any)['data'] = this._data;
-            this._list.dispatchEvent(selectedEvent);
+            this.dispatchEvent(selectedEvent);
+            //this._list.dispatchEvent(selectedEvent);
         });
     }
 
