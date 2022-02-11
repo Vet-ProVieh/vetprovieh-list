@@ -33,6 +33,7 @@ publish:
   stage: publish
   before_script:
     - echo "Creating NPM-RC"
+    - echo ".npm" >> .npmignore
     - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
   script: 
     - npm publish --access public
