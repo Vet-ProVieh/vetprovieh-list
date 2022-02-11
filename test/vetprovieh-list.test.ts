@@ -3,7 +3,7 @@ import fetch from 'jest-fetch-mock';
 enableFetchMocks();
 
 import { VetproviehList } from "../lib/vetprovieh-list";
-import { Indexable } from '@tomuench/vetprovieh-shared/lib/interfaces/indexable';
+import { Indexable } from '@vetprovieh/vetprovieh-shared/lib/interfaces/indexable';
 import { PersonRepository } from './mockups/personRepository';
 
 
@@ -196,8 +196,9 @@ describe("selectedEvent", () => {
     test("should fire event", () => {
         let firstItem = listItems.children[0];
 
-        list.addEventListener("selected", (event: Indexable) => {
-            expect(event["data"]).toEqual(data[0]);
+        list.addEventListener("selected", (event: Event) => {
+            // Second Item because they are sorted
+            expect((event as CustomEvent).detail).toEqual(data[1]);
         });
 
         firstItem.dispatchEvent(new Event("click"));

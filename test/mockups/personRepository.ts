@@ -1,6 +1,6 @@
 
 import { Person } from "./person";
-import { BaseRepository } from "@tomuench/vetprovieh-shared/lib";
+import { BaseRepository } from "@vetprovieh/vetprovieh-shared/lib";
 
 export class PersonRepository extends BaseRepository<Person> {
 
