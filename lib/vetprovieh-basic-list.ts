@@ -4,6 +4,7 @@ import {
 } from '@vetprovieh/vetprovieh-shared/lib/index';
 import {DataHelper} from './helpers/dataHelper';
 import {ListItemFactory} from './helpers/listItemFactory';
+import { SearchHelper } from './helpers/searchHelper';
 
 /**
  * List Element for Vet:Provieh
@@ -261,24 +262,11 @@ export class VetproviehBasicList extends VetproviehElement {
      * Input in search has Changed
      * @private
      */
-  _addSearchFieldListener() {
+  private _addSearchFieldListener() {
     if (this.shadowRoot) {
-      let searchTimer: any;
-      let value: any = null;
-      const searchField = this.shadowRoot?.querySelector('#search');
-      if (searchField) {
-        searchField.addEventListener('keyup', (event) => {
-          const target = event.target as HTMLInputElement;
-          if (value != target.value) {
-            clearTimeout(searchTimer);
-            value = target.value;
-            searchTimer = setTimeout(() => {
-              this.search(value);
-            }, 300);
-          }
-        });
-        this.updateVisibility('searchControl', this.searchable);
-      }
+      const searchHelper = new SearchHelper(this);
+      searchHelper.activateListener();
+      searchHelper.toggleSearchControls();
     }
   }
 
@@ -308,6 +296,14 @@ export class VetproviehBasicList extends VetproviehElement {
      */
   get _readyToFetch() {
     return this.pagesize && this.repository && this.shadowRoot;
+  }
+
+  /***
+   * Getting SearchFIeld
+   * @return {HTMLElement}
+   */
+  public get searchField() : HTMLElement{
+    return this.shadowRoot?.querySelector('#search') as HTMLElement;
   }
 
   /**
@@ -374,9 +370,4 @@ export class VetproviehBasicList extends VetproviehElement {
   public elementSelected(event: CustomEvent) {
     this.dispatchEvent(new CustomEvent('selected', {detail: event.detail}));
   }
-
-
-  // -----------------
-  // CLASS METHODS
-  // -----------------
 }
