@@ -4,7 +4,7 @@ import {
 } from '@vetprovieh/vetprovieh-shared/lib/index';
 import {DataHelper} from './helpers/dataHelper';
 import {ListItemFactory} from './helpers/listItemFactory';
-import { SearchHelper } from './helpers/searchHelper';
+import {SearchHelper} from './helpers/searchHelper';
 
 /**
  * List Element for Vet:Provieh
@@ -298,11 +298,11 @@ export class VetproviehBasicList extends VetproviehElement {
     return this.pagesize && this.repository && this.shadowRoot;
   }
 
-  /***
+  /** *
    * Getting SearchFIeld
    * @return {HTMLElement}
    */
-  public get searchField() : HTMLElement{
+  public get searchField() : HTMLElement {
     return this.shadowRoot?.querySelector('#search') as HTMLElement;
   }
 
@@ -331,7 +331,8 @@ export class VetproviehBasicList extends VetproviehElement {
           .then((data) => self.attachData(
               data,
               searchValue,
-              true));
+              true))
+          .catch((error) => console.error(error));
     }
   }
 

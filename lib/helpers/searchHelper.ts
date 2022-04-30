@@ -1,6 +1,7 @@
-import { VetproviehBasicList } from "..";
+import {VetproviehBasicList} from '..';
 
-var LISTENING_TO_EVENT = "keyup";
+const LISTENING_TO_EVENT = 'keyup';
+const SEARCH_DELAY = 300;
 
 /**
  * Helper for Search functionality in Vetprovieh-List
@@ -13,7 +14,7 @@ export class SearchHelper {
 
   /**
    * Default-Constructor
-   * @param {VetproviehBasicList} list 
+   * @param {VetproviehBasicList} list
    */
   constructor(list: VetproviehBasicList) {
     this.list = list;
@@ -25,22 +26,22 @@ export class SearchHelper {
    * @param {string} searchValue
    */
   private set currentSearch(searchValue: string) {
-    if (this.searchValue != searchValue) {
+    if (this.searchValue !== searchValue) {
       clearTimeout(this.searchTimer);
       this.searchValue = searchValue;
       this.searchTimer = setTimeout(() => {
         this.list.search(searchValue);
-      }, 300);
+      }, SEARCH_DELAY);
     }
   }
 
   /**
-   * Updates visibility of search controls 
+   * Updates visibility of search controls
    */
-  public toggleSearchControls(){
+  public toggleSearchControls() {
     this.list.updateVisibility(
-      'searchControl',
-      this.list.searchable
+        'searchControl',
+        this.list.searchable
     );
   }
 
@@ -50,11 +51,11 @@ export class SearchHelper {
   public activateListener() {
     if (this.searchField) {
       this.searchField.addEventListener(
-        LISTENING_TO_EVENT,
-        (event) => {
-          const target = event.target as HTMLInputElement;
-          this.currentSearch = target.value;
-        });
+          LISTENING_TO_EVENT,
+          (event) => {
+            const target = event.target as HTMLInputElement;
+            this.currentSearch = target.value;
+          });
     }
   }
 }
