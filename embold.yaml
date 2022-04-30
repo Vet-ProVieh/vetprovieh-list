@@ -22,6 +22,7 @@ sources:
     - 'library'
     - '.git'
     - 'dist'
+    - 'package-lock.json'
     
 # Specify the languages you would like to Scan. Default is all Detected
 #languages: 'JAVA,CPP'
