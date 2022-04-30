@@ -1,9 +1,9 @@
 import {VetproviehPager} from '@vetprovieh/vetprovieh-pager/lib';
 import {
-  VetproviehElement,
-  IRepository,
-  BaseRepository} from '@vetprovieh/vetprovieh-shared/lib/index';
-import {ListItem} from './list-item';
+  IRepository, VetproviehElement,
+} from '@vetprovieh/vetprovieh-shared/lib/index';
+import {DataHelper} from './helpers/dataHelper';
+import {ListItemFactory} from './helpers/listItemFactory';
 
 /**
  * List Element for Vet:Provieh
@@ -30,14 +30,17 @@ export class VetproviehBasicList extends VetproviehElement {
   private _objects: any[] = [];
   private _repository: IRepository<any> | undefined;
 
+  private _dataHelper: DataHelper = new DataHelper();
+  private _itemFactory = new ListItemFactory(this);
+
   private _urlSearchParams: { [Identifier: string]: string } = {};
 
   /**
    * Get Repository
    * @return {IRepository<any>}
    */
-  public get repository() : IRepository<any> {
-    return this._repository;
+  public get repository(): IRepository<any> {
+    return this._dataHelper.repository;
   }
 
   /**
@@ -45,10 +48,8 @@ export class VetproviehBasicList extends VetproviehElement {
    * @param {IRepository<any>} val
    */
   public set repository(val: IRepository<any>) {
-    if (this._repository != val) {
-      this._repository = val;
-      this._filterObjects();
-    }
+    this._dataHelper.repository = val;
+    this._filterObjects();
   }
 
   /**
@@ -97,7 +98,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * Getter searchable
      * @return {boolean} searchable
      */
-  get searchable() : boolean {
+  get searchable(): boolean {
     return this._searchable;
   }
 
@@ -220,18 +221,16 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {boolean} clear
      */
   attachData(data: any, searchValue: any, clear = false) {
-    const listElements = this.shadowRoot?.getElementById('listElements');
-    if (clear && listElements) {
-      listElements.innerHTML = '';
-    }
-    data.forEach((element: any) => this._attachToList(element, searchValue));
+    this._itemFactory.appendAll(
+        data,
+        searchValue,
+        clear
+    );
+
     this._objects = data;
     this.dispatchEvent(new Event('loaded'));
-
-    if (listElements?.innerHTML == '') {
-      listElements.innerHTML = '<p> Keine Daten zur Anzeige gefunden. </p';
-    }
   }
+
 
   /**
      * Search for a string
@@ -321,24 +320,22 @@ export class VetproviehBasicList extends VetproviehElement {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
 
-      let searchPromise: Promise<any>;
-      if (this.repository) {
-        if (Object.keys(this._urlSearchParams).length > 0) {
-          searchPromise = this.repository.whereByParams(this._urlSearchParams);
-          searchPromise = searchPromise
-              .then((data) => BaseRepository.search(data, searchValue));
-        } else {
-          searchPromise = this.repository.where(searchValue);
-        }
+      const searchPromise = this._dataHelper.search(
+          this._urlSearchParams,
+          searchValue);
 
-        searchPromise
-            .then((data) => this._sort(data))
-            .then((data) => {
-              self._setMaxPage(data.length); return data;
-            })
-            .then((data) => self._filterByPage(data))
-            .then((data) => self.attachData(data, searchValue, true));
-      }
+
+      searchPromise
+          .then((data) => this._sort(data))
+          .then((data) => {
+            self._setMaxPage(data.length); return data;
+          })
+          .then((data) => this._dataHelper
+              .filterByPage(data, this.page, this.maxPage))
+          .then((data) => self.attachData(
+              data,
+              searchValue,
+              true));
     }
   }
 
@@ -362,49 +359,22 @@ export class VetproviehBasicList extends VetproviehElement {
   }
 
   /**
-     * Inserts Element to List
-     * @param {object} element
-     * @param {string} searchValue
-     * @private
-     */
-  _attachToList(element: any, searchValue: any) {
-    if (this.shadowRoot) {
-      const list: HTMLElement | null = this.shadowRoot
-          .getElementById('listElements');
-      if (list) {
-        const newListItem: ListItem = new ListItem(this, element);
-        newListItem.addEventListener('selected', (event) => {
-          this.elementSelected(event as CustomEvent);
-        });
-        newListItem.mark(searchValue);
-        list.appendChild(newListItem);
-      }
-    }
+   * Get Div for List element
+   * @return {HTMLElement}
+   */
+  public get listElementDiv(): HTMLElement {
+    return this.shadowRoot
+        .getElementById('listElements');
   }
 
   /**
    * Dispatch Element-Selected Event
    * @param {CustomEvent} event
    */
-  protected elementSelected(event:CustomEvent) {
+  public elementSelected(event: CustomEvent) {
     this.dispatchEvent(new CustomEvent('selected', {detail: event.detail}));
   }
 
-
-  /**
-     * Filter Data by Page
-     * @param {Array} data
-     * @param {number} currentPage
-     * @param {number} pageSize
-     * @return {Array}
-     * @private
-     */
-  _filterByPage(data: Array<any>) {
-    return data.slice(
-        (this.page - 1) * this.pagesize,
-        this.page * this.pagesize,
-    );
-  }
 
   // -----------------
   // CLASS METHODS
