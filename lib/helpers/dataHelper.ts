@@ -1,5 +1,5 @@
 import {BaseRepository, IRepository} from '@vetprovieh/vetprovieh-shared/lib';
-import { BaseModel } from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
+import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 
 
 /**

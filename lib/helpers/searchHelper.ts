@@ -11,14 +11,17 @@ export class SearchHelper {
   private searchValue: string | undefined;
   private list: VetproviehBasicList;
   private searchField: HTMLElement;
+  private searchCallback: (searchValue: string) => void;
 
   /**
    * Default-Constructor
-   * @param {VetproviehBasicList} list
+   * @param {HTMLElement} searchField
+   * @param {Function} searchCallback
    */
-  constructor(list: VetproviehBasicList) {
-    this.list = list;
-    this.searchField = this.list.searchField;
+  constructor(searchField: HTMLElement,
+      searchCallback: (searchValue: string) => void) {
+    this.searchField = searchField;
+    this.searchCallback = searchCallback;
   }
 
   /**
@@ -30,19 +33,9 @@ export class SearchHelper {
       clearTimeout(this.searchTimer);
       this.searchValue = searchValue;
       this.searchTimer = setTimeout(() => {
-        this.list.search(searchValue);
+        this.searchCallback(searchValue);
       }, SEARCH_DELAY);
     }
-  }
-
-  /**
-   * Updates visibility of search controls
-   */
-  public toggleSearchControls() {
-    this.list.updateVisibility(
-        'searchControl',
-        this.list.searchable
-    );
   }
 
   /**

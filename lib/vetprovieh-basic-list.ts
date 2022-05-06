@@ -22,11 +22,11 @@ export class VetproviehBasicList extends VetproviehElement {
     return ['pagesize', 'searchable', 'pageable'];
   }
 
-  private _pagesize: number = 0;
-  private _searchable: boolean = true;
-  private _pageable: boolean = true;
-  private _page: number = 1;
-  private _maxPage: number = 1;
+  private _pagesize = 0;
+  private _searchable = true;
+  private _pageable = true;
+  private _page = 1;
+  private _maxPage = 1;
   protected _listTemplate: DocumentFragment | undefined;
 
   private _objects: BaseModel[] = [];
@@ -220,9 +220,9 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {boolean} clear
      */
   attachData(
-    data: Array<BaseModel>, 
-    searchValue: string, 
-    clear:boolean = false) {
+      data: Array<BaseModel>,
+      searchValue: string,
+      clear = false) {
     this._itemFactory.appendAll(
         data,
         searchValue,
@@ -265,10 +265,23 @@ export class VetproviehBasicList extends VetproviehElement {
      */
   private _addSearchFieldListener() {
     if (this.shadowRoot) {
-      const searchHelper = new SearchHelper(this);
+      const searchHelper = new SearchHelper(
+          this.searchField,
+          (searchValue) => this.search(searchValue));
       searchHelper.activateListener();
-      searchHelper.toggleSearchControls();
+      this._toggleSearchControls();
     }
+  }
+
+  /**
+   * toggle SerachControl
+   * @private
+   */
+  private _toggleSearchControls() {
+    this.updateVisibility(
+        'searchControl',
+        this.searchable
+    );
   }
 
   /**
@@ -304,7 +317,7 @@ export class VetproviehBasicList extends VetproviehElement {
    * Getting SearchFIeld
    * @return {HTMLElement}
    */
-  public get searchField() : HTMLElement {
+  public get searchField(): HTMLElement {
     return this.shadowRoot?.querySelector('#search') as HTMLElement;
   }
 
