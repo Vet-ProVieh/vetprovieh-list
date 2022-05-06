@@ -1,3 +1,4 @@
+import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 import {VetproviehBasicList} from '..';
 import {ListItem} from '../list-item';
 
@@ -20,17 +21,17 @@ export class ListItemFactory {
 
   /**
      * Appending new Data and clear parent div
-     * @param {any[]} elements
+     * @param {BaseModel[]} elements
      * @param {string|undefined} searchValue
      * @param {boolean} clear
      */
   public appendAll(
-      elements: any[],
+      elements: BaseModel[],
       searchValue: string | undefined,
       clear: boolean) {
     if (this._parentList.shadowRoot) {
       this.clearItemDiv(clear);
-      elements.forEach((element: any) => {
+      elements.forEach((element: BaseModel) => {
         this.appendAndMarkSearch(
             element,
             searchValue);
@@ -65,11 +66,11 @@ export class ListItemFactory {
 
   /**
    * Append an element and mark search value
-   * @param {any} element
+   * @param {BaseModel} element
    * @param {string|undefined} searchValue
    */
   public appendAndMarkSearch(
-      element: any,
+      element: BaseModel,
       searchValue: string | undefined
   ) {
     const newItem = this.append(element);
@@ -79,10 +80,10 @@ export class ListItemFactory {
   /**
      * Append a new ListItem to parent list
      * and return the item
-     * @param {any} dataElement
+     * @param {BaseModel} dataElement
      * @return {ListItem}
      */
-  public append(dataElement: any): ListItem {
+  public append(dataElement: BaseModel): ListItem {
     const newListItem: ListItem = new ListItem(
         this._parentList,
         dataElement);

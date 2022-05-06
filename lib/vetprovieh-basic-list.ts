@@ -2,6 +2,7 @@ import {VetproviehPager} from '@vetprovieh/vetprovieh-pager/lib';
 import {
   IRepository, VetproviehElement,
 } from '@vetprovieh/vetprovieh-shared/lib/index';
+import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 import {DataHelper} from './helpers/dataHelper';
 import {ListItemFactory} from './helpers/listItemFactory';
 import {SearchHelper} from './helpers/searchHelper';
@@ -28,8 +29,8 @@ export class VetproviehBasicList extends VetproviehElement {
   private _maxPage = 1;
   protected _listTemplate: DocumentFragment | undefined;
 
-  private _objects: any[] = [];
-  private _repository: IRepository<any> | undefined;
+  private _objects: BaseModel[] = [];
+  private _repository: IRepository<BaseModel> | undefined;
 
   private _dataHelper: DataHelper = new DataHelper();
   private _itemFactory = new ListItemFactory(this);
@@ -38,17 +39,17 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
    * Get Repository
-   * @return {IRepository<any>}
+   * @return {IRepository<BaseModel>}
    */
-  public get repository(): IRepository<any> {
+  public get repository(): IRepository<BaseModel> {
     return this._dataHelper.repository;
   }
 
   /**
    * Set Repository
-   * @param {IRepository<any>} val
+   * @param {IRepository<BaseModel>} val
    */
-  public set repository(val: IRepository<any>) {
+  public set repository(val: IRepository<BaseModel>) {
     this._dataHelper.repository = val;
     this._filterObjects();
   }
@@ -135,7 +136,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * Setter Pageable
      * @param {boolean} val
      */
-  set pageable(val) {
+  set pageable(val: boolean) {
     if (val !== this.pageable) {
       this._pageable = val === true || (val as any) === 'true';
       this._updatePager();
@@ -144,8 +145,7 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Getter pagesize
-     * @property {int} pagesize
-     * @return {int}
+     * @return {number}
      */
   get pagesize() {
     return this._pagesize;
@@ -154,9 +154,9 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Setter Pagesize
-     * @param {int} val
+     * @param {number} val
      */
-  set pagesize(val) {
+  set pagesize(val: number) {
     if (val !== this.pagesize) {
       this._pagesize = val;
       this._setMaxPage(this._objects.length);
@@ -165,8 +165,7 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Getter CurrentPage
-     * @property {int} page
-     * @return {int}
+     * @return {number}
      */
   get page() {
     return this._page;
@@ -174,9 +173,9 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Setter CurrentPage
-     * @param {int} val
+     * @param {number} val
      */
-  set page(val) {
+  set page(val: number) {
     if (val !== this.page && val <= this.maxPage) {
       this._page = val;
       this._updatePager();
@@ -185,8 +184,7 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Getter MaxPage
-     * @property {int} maxPage
-     * @return {int}
+     * @return {number}
      */
   get maxPage() {
     return this._maxPage;
@@ -195,9 +193,9 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Setter MaxPage
-     * @param {int} val
+     * @param {number} val
      */
-  set maxPage(val) {
+  set maxPage(val: number) {
     if (val !== this.maxPage) {
       this._maxPage = val;
       this._updatePager();
@@ -217,11 +215,11 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Attach Data to List
-     * @param {Array} data
+     * @param {Array<BaseModel>} data
      * @param {string} searchValue
      * @param {boolean} clear
      */
-  attachData(data: any, searchValue: any, clear = false) {
+  attachData(data: Array<BaseModel>, searchValue: any, clear = false) {
     this._itemFactory.appendAll(
         data,
         searchValue,
@@ -286,15 +284,15 @@ export class VetproviehBasicList extends VetproviehElement {
      * @return {VetproviehPager}
      * @private
      */
-  get _pager(): VetproviehPager {
-    return this.shadowRoot?.getElementById('pager') as VetproviehPager;
+  private get _pager(): VetproviehPager {
+    return this.shadowRoot.getElementById('pager') as VetproviehPager;
   }
 
   /**
      * Can component fetch new data?
      * @private
      */
-  get _readyToFetch() {
+  private get _readyToFetch() {
     return this.pagesize && this.repository && this.shadowRoot;
   }
 
@@ -311,7 +309,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {string | undefined} searchValue
      * @private
      */
-  _filterObjects(searchValue: string | undefined = undefined) {
+  private _filterObjects(searchValue: string | undefined = undefined) {
     if (this._readyToFetch) {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
@@ -346,11 +344,12 @@ export class VetproviehBasicList extends VetproviehElement {
   }
 
   /**
+   * @protected
      * Set Max-Page by lenth of data
      * @param {number} dataLength
      * @return {boolean}
      */
-  _setMaxPage(dataLength: number) {
+  protected _setMaxPage(dataLength: number) {
     this.maxPage = Math.ceil(dataLength / this.pagesize);
     return true;
   }
