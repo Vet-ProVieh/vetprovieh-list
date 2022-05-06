@@ -1,4 +1,3 @@
-import {VetproviehBasicList} from '..';
 
 const LISTENING_TO_EVENT = 'keyup';
 const SEARCH_DELAY = 300;
@@ -9,7 +8,6 @@ const SEARCH_DELAY = 300;
 export class SearchHelper {
   private searchTimer: any;
   private searchValue: string | undefined;
-  private list: VetproviehBasicList;
   private searchField: HTMLElement;
   private searchCallback: (searchValue: string) => void;
 

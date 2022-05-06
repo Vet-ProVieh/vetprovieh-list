@@ -33,7 +33,7 @@ export class VetproviehBasicList extends VetproviehElement {
   private _repository: IRepository<BaseModel> | undefined;
 
   private _dataHelper: DataHelper = new DataHelper();
-  private _itemFactory = new ListItemFactory(this);
+  private _itemFactory;
 
   private _urlSearchParams: { [Identifier: string]: string } = {};
 
@@ -84,6 +84,13 @@ export class VetproviehBasicList extends VetproviehElement {
     if (listTemplate) {
       this.setlistTemplate(listTemplate);
     }
+
+    this._itemFactory = new ListItemFactory(
+        this.listElementDiv,
+        this.listTemplate,
+        (event: CustomEvent) =>
+          this.elementSelected(event)
+    );
   }
 
   /**

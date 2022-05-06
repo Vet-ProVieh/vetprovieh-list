@@ -2,6 +2,7 @@ import {
   WebComponent,
   ViewHelper,
   Indexable} from '@vetprovieh/vetprovieh-shared/lib';
+import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 
 
 // eslint-disable-next-line new-cap
@@ -14,18 +15,18 @@ import {
  */
 export class ListItem extends HTMLElement {
   private _data: any;
-  private _list: any;
 
   /**
    * Default-Constructor
-   * @param {any} list
-   * @param {any} data
+   * @param {DocumentFragment} template
+   * @param {BaseModel} data
    */
-  constructor(list: any, data: any) {
+  constructor(
+      template: DocumentFragment,
+      data: BaseModel) {
     super();
-    this._list = list;
     this._data = data;
-    this._generate();
+    this._generate(template);
   }
 
   /**
@@ -68,9 +69,10 @@ export class ListItem extends HTMLElement {
 
   /**
    * Generating the ListItem
+   * @param {DocumentFragment} template
    */
-  private _generate() {
-    const newNode = document.importNode(this._list.listTemplate, true);
+  private _generate(template: DocumentFragment) {
+    const newNode = document.importNode(template, true);
     this._attachEventListener('click');
     this.appendChild(newNode);
     ViewHelper.replacePlaceholders(this, this._data);

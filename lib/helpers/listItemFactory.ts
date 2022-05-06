@@ -1,5 +1,4 @@
 import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
-import {VetproviehBasicList} from '..';
 import {ListItem} from '../list-item';
 
 const LIST_PLACEHOLDER = '<p> Keine Daten zur Anzeige gefunden. </p>';
@@ -7,15 +6,23 @@ const LIST_PLACEHOLDER = '<p> Keine Daten zur Anzeige gefunden. </p>';
  * ListItemFactory
  */
 export class ListItemFactory {
-  private _parentList: VetproviehBasicList;
+  private _listItemDiv: HTMLElement;
+  private _template: DocumentFragment;
+  private _callbackSelected: (event: CustomEvent) => void;
 
   /**
    * Default-Contructor
-   * @param {VetproviehBasicList} parentList
+   * @param {HTMLElement} listItemDiv
+   * @param {DocumentFragment} template
+   * @param {Function} callbackSelected
    */
   constructor(
-      parentList: VetproviehBasicList) {
-    this._parentList = parentList;
+      listItemDiv: HTMLElement,
+      template: DocumentFragment,
+      callbackSelected: (event: CustomEvent) => void) {
+    this._listItemDiv = listItemDiv;
+    this._template = template;
+    this._callbackSelected = callbackSelected;
   }
 
 
@@ -29,16 +36,14 @@ export class ListItemFactory {
       elements: BaseModel[],
       searchValue: string | undefined,
       clear: boolean) {
-    if (this._parentList.shadowRoot) {
-      this.clearItemDiv(clear);
-      elements.forEach((element: BaseModel) => {
-        this.appendAndMarkSearch(
-            element,
-            searchValue);
-      });
+    this.clearItemDiv(clear);
+    elements.forEach((element: BaseModel) => {
+      this.appendAndMarkSearch(
+          element,
+          searchValue);
+    });
 
-      this.insertPlaceholderIfEmpty();
-    }
+    this.insertPlaceholderIfEmpty();
   }
 
 
@@ -47,10 +52,8 @@ export class ListItemFactory {
      * @param {boolean} clear
      */
   private clearItemDiv(clear: boolean) {
-    const listElements = this._parentList
-        .listElementDiv;
-    if (clear && listElements) {
-      listElements.innerHTML = '';
+    if (clear && this._listItemDiv) {
+      this._listItemDiv.innerHTML = '';
     }
   }
 
@@ -58,9 +61,8 @@ export class ListItemFactory {
      * Insert a placeholder if elements are empty
      */
   private insertPlaceholderIfEmpty() {
-    const listElements = this._parentList.listElementDiv;
-    if (listElements?.innerHTML === '') {
-      listElements.innerHTML = LIST_PLACEHOLDER;
+    if (this._listItemDiv?.innerHTML === '') {
+      this._listItemDiv.innerHTML = LIST_PLACEHOLDER;
     }
   }
 
@@ -85,13 +87,12 @@ export class ListItemFactory {
      */
   public append(dataElement: BaseModel): ListItem {
     const newListItem: ListItem = new ListItem(
-        this._parentList,
+        this._template,
         dataElement);
 
     this.addEventListeners(newListItem);
 
-    this._parentList
-        .listElementDiv
+    this._listItemDiv
         .appendChild(newListItem);
 
     return newListItem;
@@ -105,10 +106,6 @@ export class ListItemFactory {
   private addEventListeners(listItem: ListItem) {
     listItem.addEventListener(
         'selected',
-        (event) => {
-          this._parentList.elementSelected(
-                    event as CustomEvent
-          );
-        });
+        (event) => this._callbackSelected(event as CustomEvent));
   }
 }
