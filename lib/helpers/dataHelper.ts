@@ -63,7 +63,7 @@ export class DataHelper {
        * @param {number} pageSize
        * @return {Array<BaseModel>}
        */
-  filterByPage(data: Array<BaseModel>,
+  filterByPage(data: BaseModel[],
       currentPage: number,
       pageSize: number) {
     return data.slice(

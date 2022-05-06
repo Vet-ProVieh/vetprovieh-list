@@ -22,18 +22,18 @@ export class VetproviehBasicList extends VetproviehElement {
     return ['pagesize', 'searchable', 'pageable'];
   }
 
-  private _pagesize = 0;
-  private _searchable = true;
-  private _pageable = true;
-  private _page = 1;
-  private _maxPage = 1;
+  private _pagesize: number = 0;
+  private _searchable: boolean = true;
+  private _pageable: boolean = true;
+  private _page: number = 1;
+  private _maxPage: number = 1;
   protected _listTemplate: DocumentFragment | undefined;
 
   private _objects: BaseModel[] = [];
   private _repository: IRepository<BaseModel> | undefined;
 
   private _dataHelper: DataHelper = new DataHelper();
-  private _itemFactory;
+  private _itemFactory: ListItemFactory;
 
   private _urlSearchParams: { [Identifier: string]: string } = {};
 
@@ -227,7 +227,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {boolean} clear
      */
   attachData(
-      data: Array<BaseModel>,
+      data: BaseModel[],
       searchValue: string,
       clear = false) {
     this._itemFactory.appendAll(
