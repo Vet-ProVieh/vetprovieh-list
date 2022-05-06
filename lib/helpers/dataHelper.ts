@@ -1,4 +1,5 @@
 import {BaseRepository, IRepository} from '@vetprovieh/vetprovieh-shared/lib';
+import { BaseModel } from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 
 
 /**
@@ -17,7 +18,7 @@ export class DataHelper {
      * @param {string|undefined} value
      * @return {Promise}
      **/
-  public search(
+  public async search(
       params: any,
       value: string | undefined = undefined
   ): Promise<any> {
@@ -42,7 +43,7 @@ export class DataHelper {
      * @param {string|undefined} value
      * @return {Promise}
      **/
-  private remoteSearch(
+  private async remoteSearch(
       params: { [Identifier: string]: string },
       value: string | undefined = undefined
   ): Promise<any> {
@@ -57,12 +58,12 @@ export class DataHelper {
 
   /**
        * Filter Data by Page
-       * @param {Array} data
+       * @param {Array<BaseModel>} data
        * @param {number} currentPage
        * @param {number} pageSize
-       * @return {Array}
+       * @return {Array<BaseModel>}
        */
-  filterByPage(data: Array<any>,
+  filterByPage(data: Array<BaseModel>,
       currentPage: number,
       pageSize: number) {
     return data.slice(
@@ -74,18 +75,18 @@ export class DataHelper {
 
   /**
      * Get Repository
-     * @return {IRepository<any>}
+     * @return {IRepository<BaseModel>}
      */
-  public get repository(): IRepository<any> {
+  public get repository(): IRepository<BaseModel> {
     return this._repository;
   }
 
 
   /**
      * Set Repository
-     * @param {IRepository<any>} v
+     * @param {IRepository<BaseModel>} v
      */
-  public set repository(v: IRepository<any>) {
+  public set repository(v: IRepository<BaseModel>) {
     if (v !== this._repository) {
       this._repository = v;
     }

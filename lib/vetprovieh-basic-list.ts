@@ -22,11 +22,11 @@ export class VetproviehBasicList extends VetproviehElement {
     return ['pagesize', 'searchable', 'pageable'];
   }
 
-  private _pagesize = 0;
-  private _searchable = true;
-  private _pageable = true;
-  private _page = 1;
-  private _maxPage = 1;
+  private _pagesize: number = 0;
+  private _searchable: boolean = true;
+  private _pageable: boolean = true;
+  private _page: number = 1;
+  private _maxPage: number = 1;
   protected _listTemplate: DocumentFragment | undefined;
 
   private _objects: BaseModel[] = [];
@@ -219,7 +219,10 @@ export class VetproviehBasicList extends VetproviehElement {
      * @param {string} searchValue
      * @param {boolean} clear
      */
-  attachData(data: Array<BaseModel>, searchValue: any, clear = false) {
+  attachData(
+    data: Array<BaseModel>, 
+    searchValue: string, 
+    clear:boolean = false) {
     this._itemFactory.appendAll(
         data,
         searchValue,
@@ -290,6 +293,7 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
      * Can component fetch new data?
+     * @return {boolean}
      * @private
      */
   private get _readyToFetch() {

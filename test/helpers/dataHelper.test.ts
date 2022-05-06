@@ -17,12 +17,11 @@ describe('search', () => {
     
     describe('no repository', () => {
         let helper = new DataHelper();
-        it('should throw an error', () => {
-            const t = () => {
-                helper.search({name: "muster"});
-              };
-              expect(t).toThrow('No Repository is set');
-              
+        helper.repository = undefined;
+        it('should throw an error', async () => {
+              await expect(helper.search({name: "muster"},"")).rejects.toEqual(
+                Error('No Repository is set')
+              );
         });
     });
     
