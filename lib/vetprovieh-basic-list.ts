@@ -22,15 +22,14 @@ export class VetproviehBasicList extends VetproviehElement {
     return ['pagesize', 'searchable', 'pageable'];
   }
 
-  private _pagesize: number = 0;
-  private _searchable: boolean = true;
-  private _pageable: boolean = true;
-  private _page: number = 1;
-  private _maxPage: number = 1;
+  private _pagesize = 0;
+  private _searchable = true;
+  private _pageable = true;
+  private _page = 1;
+  private _maxPage = 1;
   protected _listTemplate: DocumentFragment | undefined;
 
   private _objects: BaseModel[] = [];
-  private _repository: IRepository<BaseModel> | undefined;
 
   private _dataHelper: DataHelper = new DataHelper();
   private _itemFactory: ListItemFactory;
@@ -91,6 +90,14 @@ export class VetproviehBasicList extends VetproviehElement {
         (event: CustomEvent) =>
           this.elementSelected(event)
     );
+  }
+
+  /**
+   * Overwrite render
+   */
+  public render() {
+    super.render();
+    if (this._itemFactory) this._itemFactory.listItemDiv = this.listElementDiv;
   }
 
   /**

@@ -25,6 +25,16 @@ export class ListItemFactory {
     this._callbackSelected = callbackSelected;
   }
 
+  /**
+   * Setter listItemDiv
+   * @param {HTMLElement} v
+   */
+  set listItemDiv(v: HTMLElement) {
+    if (this._listItemDiv !== v) {
+      this._listItemDiv = v;
+    }
+  }
+
 
   /**
      * Appending new Data and clear parent div

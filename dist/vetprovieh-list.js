@@ -24,6 +24,16 @@ function __metadata(metadataKey, metadataValue) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
 }
 
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
 /**
  * Helper to get and set Attributes on Objects
  */
@@ -4527,6 +4537,79 @@ VetproviehTable = __decorate([
      */
 ], VetproviehTable);
 
+/**
+ * Helper Class for data operations like
+ * - filter
+ * - load
+ * - search
+ */
+class DataHelper {
+    /**
+       * Executing search on repository
+       * @param {any} params
+       * @param {string|undefined} value
+       * @return {Promise}
+       **/
+    search(params, value = undefined) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.repository) {
+                let searchPromise;
+                if (Object.keys(params).length > 0) {
+                    searchPromise = this.remoteSearch(params, value);
+                }
+                else {
+                    searchPromise = this.repository.where(value);
+                }
+                return searchPromise;
+            }
+            else {
+                throw new Error('No Repository is set');
+            }
+        });
+    }
+    /**
+       * Executing remote search on repository
+       * @param {any} params
+       * @param {string|undefined} value
+       * @return {Promise}
+       **/
+    remoteSearch(params, value = undefined) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.repository
+                .whereByParams(params)
+                .then((data) => BaseRepository
+                .search(data, value));
+        });
+    }
+    /**
+         * Filter Data by Page
+         * @param {Array<BaseModel>} data
+         * @param {number} currentPage
+         * @param {number} pageSize
+         * @return {Array<BaseModel>}
+         */
+    filterByPage(data, currentPage, pageSize) {
+        return data.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    }
+    /**
+       * Get Repository
+       * @return {IRepository<BaseModel>}
+       */
+    get repository() {
+        return this._repository;
+    }
+    /**
+       * Set Repository
+       * @param {IRepository<BaseModel>} v
+       */
+    set repository(v) {
+        if (v !== this._repository) {
+            this._repository = v;
+        }
+    }
+}
+
+var _a, _b;
 // eslint-disable-next-line new-cap
 let ListItem = 
 /**
@@ -4535,14 +4618,13 @@ let ListItem =
 class ListItem extends HTMLElement {
     /**
      * Default-Constructor
-     * @param {any} list
-     * @param {any} data
+     * @param {DocumentFragment} template
+     * @param {BaseModel} data
      */
-    constructor(list, data) {
+    constructor(template, data) {
         super();
-        this._list = list;
         this._data = data;
-        this._generate();
+        this._generate(template);
     }
     /**
      * Marking Element, when found
@@ -4581,9 +4663,10 @@ class ListItem extends HTMLElement {
     }
     /**
      * Generating the ListItem
+     * @param {DocumentFragment} template
      */
-    _generate() {
-        const newNode = document.importNode(this._list.listTemplate, true);
+    _generate(template) {
+        const newNode = document.importNode(template, true);
         this._attachEventListener('click');
         this.appendChild(newNode);
         ViewHelper.replacePlaceholders(this, this._data);
@@ -4599,8 +4682,137 @@ ListItem = __decorate([
      * List-Item inside a Vetprovieh:List
      */
     ,
-    __metadata("design:paramtypes", [Object, Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof DocumentFragment !== "undefined" && DocumentFragment) === "function" ? _a : Object, typeof (_b = typeof BaseModel !== "undefined" && BaseModel) === "function" ? _b : Object])
 ], ListItem);
+
+const LIST_PLACEHOLDER = '<p> Keine Daten zur Anzeige gefunden. </p>';
+/**
+ * ListItemFactory
+ */
+class ListItemFactory {
+    /**
+     * Default-Contructor
+     * @param {HTMLElement} listItemDiv
+     * @param {DocumentFragment} template
+     * @param {Function} callbackSelected
+     */
+    constructor(listItemDiv, template, callbackSelected) {
+        this._listItemDiv = listItemDiv;
+        this._template = template;
+        this._callbackSelected = callbackSelected;
+    }
+    /**
+     * Setter listItemDiv
+     * @param {HTMLElement} v
+     */
+    set listItemDiv(v) {
+        if (this._listItemDiv !== v) {
+            this._listItemDiv = v;
+        }
+    }
+    /**
+       * Appending new Data and clear parent div
+       * @param {BaseModel[]} elements
+       * @param {string|undefined} searchValue
+       * @param {boolean} clear
+       */
+    appendAll(elements, searchValue, clear) {
+        this.clearItemDiv(clear);
+        elements.forEach((element) => {
+            this.appendAndMarkSearch(element, searchValue);
+        });
+        this.insertPlaceholderIfEmpty();
+    }
+    /**
+       * Clearing the Item Div
+       * @param {boolean} clear
+       */
+    clearItemDiv(clear) {
+        if (clear && this._listItemDiv) {
+            this._listItemDiv.innerHTML = '';
+        }
+    }
+    /**
+       * Insert a placeholder if elements are empty
+       */
+    insertPlaceholderIfEmpty() {
+        var _a;
+        if (((_a = this._listItemDiv) === null || _a === void 0 ? void 0 : _a.innerHTML) === '') {
+            this._listItemDiv.innerHTML = LIST_PLACEHOLDER;
+        }
+    }
+    /**
+     * Append an element and mark search value
+     * @param {BaseModel} element
+     * @param {string|undefined} searchValue
+     */
+    appendAndMarkSearch(element, searchValue) {
+        const newItem = this.append(element);
+        newItem.mark(searchValue);
+    }
+    /**
+       * Append a new ListItem to parent list
+       * and return the item
+       * @param {BaseModel} dataElement
+       * @return {ListItem}
+       */
+    append(dataElement) {
+        const newListItem = new ListItem(this._template, dataElement);
+        this.addEventListeners(newListItem);
+        this._listItemDiv
+            .appendChild(newListItem);
+        return newListItem;
+    }
+    /**
+       * @private
+       * Adding EventListeners to listItem
+       * @param {ListItem} listItem
+       */
+    addEventListeners(listItem) {
+        listItem.addEventListener('selected', (event) => this._callbackSelected(event));
+    }
+}
+
+const LISTENING_TO_EVENT = 'keyup';
+const SEARCH_DELAY = 300;
+/**
+ * Helper for Search functionality in Vetprovieh-List
+ */
+class SearchHelper {
+    /**
+     * Default-Constructor
+     * @param {HTMLElement} searchField
+     * @param {Function} searchCallback
+     */
+    constructor(searchField, searchCallback) {
+        this.searchField = searchField;
+        this.searchCallback = searchCallback;
+    }
+    /**
+     * Update current searchValue and dispatch event
+     * @param {string} searchValue
+     */
+    set currentSearch(searchValue) {
+        if (this.searchValue !== searchValue) {
+            clearTimeout(this.searchTimer);
+            this.searchValue = searchValue;
+            this.searchTimer = setTimeout(() => {
+                this.searchCallback(searchValue);
+            }, SEARCH_DELAY);
+        }
+    }
+    /**
+     * Activiating Event-Listener for serachField
+     */
+    activateListener() {
+        if (this.searchField) {
+            this.searchField.addEventListener(LISTENING_TO_EVENT, (event) => {
+                const target = event.target;
+                this.currentSearch = target.value;
+            });
+        }
+    }
+}
 
 /**
  * List Element for Vet:Provieh
@@ -4622,11 +4834,13 @@ class VetproviehBasicList extends VetproviehElement {
         this._page = 1;
         this._maxPage = 1;
         this._objects = [];
+        this._dataHelper = new DataHelper();
         this._urlSearchParams = {};
         const listTemplate = pListTemplate || this.querySelector('template');
         if (listTemplate) {
             this.setlistTemplate(listTemplate);
         }
+        this._itemFactory = new ListItemFactory(this.listElementDiv, this.listTemplate, (event) => this.elementSelected(event));
     }
     /**
        * Getting observed Attributes
@@ -4637,20 +4851,18 @@ class VetproviehBasicList extends VetproviehElement {
     }
     /**
      * Get Repository
-     * @return {IRepository<any>}
+     * @return {IRepository<BaseModel>}
      */
     get repository() {
-        return this._repository;
+        return this._dataHelper.repository;
     }
     /**
      * Set Repository
-     * @param {IRepository<any>} val
+     * @param {IRepository<BaseModel>} val
      */
     set repository(val) {
-        if (this._repository != val) {
-            this._repository = val;
-            this._filterObjects();
-        }
+        this._dataHelper.repository = val;
+        this._filterObjects();
     }
     /**
      * Getting Objects from List
@@ -4667,6 +4879,14 @@ class VetproviehBasicList extends VetproviehElement {
         if (params !== this._urlSearchParams) {
             this._urlSearchParams = params;
         }
+    }
+    /**
+     * Overwrite render
+     */
+    render() {
+        super.render();
+        if (this._itemFactory)
+            this._itemFactory.listItemDiv = this.listElementDiv;
     }
     /**
      * Setting internal List Template
@@ -4720,15 +4940,14 @@ class VetproviehBasicList extends VetproviehElement {
     }
     /**
        * Getter pagesize
-       * @property {int} pagesize
-       * @return {int}
+       * @return {number}
        */
     get pagesize() {
         return this._pagesize;
     }
     /**
        * Setter Pagesize
-       * @param {int} val
+       * @param {number} val
        */
     set pagesize(val) {
         if (val !== this.pagesize) {
@@ -4738,15 +4957,14 @@ class VetproviehBasicList extends VetproviehElement {
     }
     /**
        * Getter CurrentPage
-       * @property {int} page
-       * @return {int}
+       * @return {number}
        */
     get page() {
         return this._page;
     }
     /**
        * Setter CurrentPage
-       * @param {int} val
+       * @param {number} val
        */
     set page(val) {
         if (val !== this.page && val <= this.maxPage) {
@@ -4756,15 +4974,14 @@ class VetproviehBasicList extends VetproviehElement {
     }
     /**
        * Getter MaxPage
-       * @property {int} maxPage
-       * @return {int}
+       * @return {number}
        */
     get maxPage() {
         return this._maxPage;
     }
     /**
        * Setter MaxPage
-       * @param {int} val
+       * @param {number} val
        */
     set maxPage(val) {
         if (val !== this.maxPage) {
@@ -4784,22 +5001,14 @@ class VetproviehBasicList extends VetproviehElement {
     }
     /**
        * Attach Data to List
-       * @param {Array} data
+       * @param {Array<BaseModel>} data
        * @param {string} searchValue
        * @param {boolean} clear
        */
     attachData(data, searchValue, clear = false) {
-        var _a;
-        const listElements = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('listElements');
-        if (clear && listElements) {
-            listElements.innerHTML = '';
-        }
-        data.forEach((element) => this._attachToList(element, searchValue));
+        this._itemFactory.appendAll(data, searchValue, clear);
         this._objects = data;
         this.dispatchEvent(new Event('loaded'));
-        if ((listElements === null || listElements === void 0 ? void 0 : listElements.innerHTML) == '') {
-            listElements.innerHTML = '<p> Keine Daten zur Anzeige gefunden. </p';
-        }
     }
     /**
        * Search for a string
@@ -4828,25 +5037,18 @@ class VetproviehBasicList extends VetproviehElement {
        * @private
        */
     _addSearchFieldListener() {
-        var _a;
         if (this.shadowRoot) {
-            let searchTimer;
-            let value = null;
-            const searchField = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('#search');
-            if (searchField) {
-                searchField.addEventListener('keyup', (event) => {
-                    const target = event.target;
-                    if (value != target.value) {
-                        clearTimeout(searchTimer);
-                        value = target.value;
-                        searchTimer = setTimeout(() => {
-                            this.search(value);
-                        }, 300);
-                    }
-                });
-                this.updateVisibility('searchControl', this.searchable);
-            }
+            const searchHelper = new SearchHelper(this.searchField, (searchValue) => this.search(searchValue));
+            searchHelper.activateListener();
+            this._toggleSearchControls();
         }
+    }
+    /**
+     * toggle SerachControl
+     * @private
+     */
+    _toggleSearchControls() {
+        this.updateVisibility('searchControl', this.searchable);
     }
     /**
        * Updating Pager
@@ -4864,15 +5066,23 @@ class VetproviehBasicList extends VetproviehElement {
        * @private
        */
     get _pager() {
-        var _a;
-        return (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.getElementById('pager');
+        return this.shadowRoot.getElementById('pager');
     }
     /**
        * Can component fetch new data?
+       * @return {boolean}
        * @private
        */
     get _readyToFetch() {
         return this.pagesize && this.repository && this.shadowRoot;
+    }
+    /** *
+     * Getting SearchFIeld
+     * @return {HTMLElement}
+     */
+    get searchField() {
+        var _a;
+        return (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('#search');
     }
     /**
        * Loading Data from Remote-Server
@@ -4883,25 +5093,17 @@ class VetproviehBasicList extends VetproviehElement {
         if (this._readyToFetch) {
             // eslint-disable-next-line @typescript-eslint/no-this-alias
             const self = this;
-            let searchPromise;
-            if (this.repository) {
-                if (Object.keys(this._urlSearchParams).length > 0) {
-                    searchPromise = this.repository.whereByParams(this._urlSearchParams);
-                    searchPromise = searchPromise
-                        .then((data) => BaseRepository.search(data, searchValue));
-                }
-                else {
-                    searchPromise = this.repository.where(searchValue);
-                }
-                searchPromise
-                    .then((data) => this._sort(data))
-                    .then((data) => {
-                    self._setMaxPage(data.length);
-                    return data;
-                })
-                    .then((data) => self._filterByPage(data))
-                    .then((data) => self.attachData(data, searchValue, true));
-            }
+            const searchPromise = this._dataHelper.search(this._urlSearchParams, searchValue);
+            searchPromise
+                .then((data) => this._sort(data))
+                .then((data) => {
+                self._setMaxPage(data.length);
+                return data;
+            })
+                .then((data) => this._dataHelper
+                .filterByPage(data, this.page, this.maxPage))
+                .then((data) => self.attachData(data, searchValue, true))
+                .catch((error) => console.error(error));
         }
     }
     /**
@@ -4913,6 +5115,7 @@ class VetproviehBasicList extends VetproviehElement {
         return data;
     }
     /**
+     * @protected
        * Set Max-Page by lenth of data
        * @param {number} dataLength
        * @return {boolean}
@@ -4922,24 +5125,12 @@ class VetproviehBasicList extends VetproviehElement {
         return true;
     }
     /**
-       * Inserts Element to List
-       * @param {object} element
-       * @param {string} searchValue
-       * @private
-       */
-    _attachToList(element, searchValue) {
-        if (this.shadowRoot) {
-            const list = this.shadowRoot
-                .getElementById('listElements');
-            if (list) {
-                const newListItem = new ListItem(this, element);
-                newListItem.addEventListener('selected', (event) => {
-                    this.elementSelected(event);
-                });
-                newListItem.mark(searchValue);
-                list.appendChild(newListItem);
-            }
-        }
+     * Get Div for List element
+     * @return {HTMLElement}
+     */
+    get listElementDiv() {
+        return this.shadowRoot
+            .getElementById('listElements');
     }
     /**
      * Dispatch Element-Selected Event
@@ -4947,17 +5138,6 @@ class VetproviehBasicList extends VetproviehElement {
      */
     elementSelected(event) {
         this.dispatchEvent(new CustomEvent('selected', { detail: event.detail }));
-    }
-    /**
-       * Filter Data by Page
-       * @param {Array} data
-       * @param {number} currentPage
-       * @param {number} pageSize
-       * @return {Array}
-       * @private
-       */
-    _filterByPage(data) {
-        return data.slice((this.page - 1) * this.pagesize, this.page * this.pagesize);
     }
 }
 

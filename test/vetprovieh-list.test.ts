@@ -46,9 +46,6 @@ describe('constructor', function () {
     test("should init default values", () => {
         const list = new VetproviehList(template);
         list.connectedCallback();
-        setTimeout(() => {
-            expect(list.objects.length).toBeGreaterThan(0);
-        }, 100);
         expect(list.pagesize).toEqual(0);
         expect(list.pageable).toEqual(true);
         expect(list.page).toEqual(1);
@@ -57,15 +54,25 @@ describe('constructor', function () {
     })
 });
 
-describe('objects', function () {
-    test('should set src', () => {
-        let list = new VetproviehList(template);
-        list.repository = new PersonRepository();
-        list.connectedCallback();
+describe('objects',  () => {
+    test('should set src',  (done) => {
+        let list = generateList();
+        list.search("Dagobert");
         setTimeout(() => {
-            expect(list.objects).toBe(data);
+            expect(list.objects).toStrictEqual([data[1]]);
+            done();
         },200);
     })
+});
+
+describe('content', () => {
+    test('should have items', (done) => {
+        let list = generateList();
+        setTimeout(() => {
+            let container = list.shadowRoot.getElementById("listElements");
+            done(container.children.length == 0);
+        },200); 
+    });
 });
 
 describe('pageable', function () {
