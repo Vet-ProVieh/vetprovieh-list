@@ -4,6 +4,7 @@ stages:
   - build
   - publish
 
+image: node:alpine
 cache:
   key: node_modules
   paths:
