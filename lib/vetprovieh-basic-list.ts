@@ -338,9 +338,9 @@ export class VetproviehBasicList extends VetproviehElement {
   /**
      * Loading Data from Remote-Server
      * @param {string | undefined} searchValue
-     * @private
+     * @protected
      */
-  private _filterObjects(searchValue: string | undefined = undefined) {
+  protected _filterObjects(searchValue: string | undefined = undefined) {
     if (this._readyToFetch) {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
