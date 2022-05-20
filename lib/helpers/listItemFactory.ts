@@ -1,4 +1,4 @@
-import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
+import {BaseModel} from '@vetprovieh/vetprovieh-shared';
 import {ListItem} from '../list-item';
 
 const LIST_PLACEHOLDER = '<p> Keine Daten zur Anzeige gefunden. </p>';

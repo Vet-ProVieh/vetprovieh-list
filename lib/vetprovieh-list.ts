@@ -1,6 +1,6 @@
 import {
   VetproviehElement,
-  WebComponent} from '@vetprovieh/vetprovieh-shared/lib/index';
+  WebComponent} from '@vetprovieh/vetprovieh-shared';
 import {VetproviehBasicList} from './vetprovieh-basic-list';
 
 export {VetproviehPager} from '@vetprovieh/vetprovieh-pager/lib';

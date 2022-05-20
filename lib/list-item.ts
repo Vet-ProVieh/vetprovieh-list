@@ -1,8 +1,8 @@
 import {
+  BaseModel,
   WebComponent,
   ViewHelper,
-  Indexable} from '@vetprovieh/vetprovieh-shared/lib';
-import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
+  Indexable} from '@vetprovieh/vetprovieh-shared';
 
 
 // eslint-disable-next-line new-cap

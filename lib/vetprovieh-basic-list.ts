@@ -1,7 +1,7 @@
 import {VetproviehPager} from '@vetprovieh/vetprovieh-pager/lib';
 import {
   IRepository, VetproviehElement,
-} from '@vetprovieh/vetprovieh-shared/lib/index';
+} from '@vetprovieh/vetprovieh-shared';
 import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 import {DataHelper} from './helpers/dataHelper';
 import {ListItemFactory} from './helpers/listItemFactory';
