@@ -1,8 +1,7 @@
-import {VetproviehPager} from '@vetprovieh/vetprovieh-pager/lib';
+import {VetproviehPager} from '@vetprovieh/vetprovieh-pager';
 import {
-  IRepository, VetproviehElement,
+  BaseModel, IRepository, VetproviehElement,
 } from '@vetprovieh/vetprovieh-shared';
-import {BaseModel} from '@vetprovieh/vetprovieh-shared/lib/orm/baseModel';
 import {DataHelper} from './helpers/dataHelper';
 import {ListItemFactory} from './helpers/listItemFactory';
 import {SearchHelper} from './helpers/searchHelper';
@@ -38,17 +37,17 @@ export class VetproviehBasicList extends VetproviehElement {
 
   /**
    * Get Repository
-   * @return {IRepository<BaseModel>}
+   * @return {IRepository<BaseModel> | undefined}
    */
-  public get repository(): IRepository<BaseModel> {
+  public get repository(): IRepository<BaseModel> | undefined {
     return this._dataHelper.repository;
   }
 
   /**
    * Set Repository
-   * @param {IRepository<BaseModel>} val
+   * @param {IRepository<BaseModel> | undefined} val
    */
-  public set repository(val: IRepository<BaseModel>) {
+  public set repository(val: IRepository<BaseModel> | undefined) {
     this._dataHelper.repository = val;
     this._filterObjects();
   }
@@ -230,12 +229,12 @@ export class VetproviehBasicList extends VetproviehElement {
   /**
      * Attach Data to List
      * @param {Array<BaseModel>} data
-     * @param {string} searchValue
+     * @param {string | undefined} searchValue
      * @param {boolean} clear
      */
   attachData(
       data: BaseModel[],
-      searchValue: string,
+      searchValue: string | undefined,
       clear = false) {
     this._itemFactory.appendAll(
         data,
@@ -315,7 +314,7 @@ export class VetproviehBasicList extends VetproviehElement {
      * @private
      */
   private get _pager(): VetproviehPager {
-    return this.shadowRoot.getElementById('pager') as VetproviehPager;
+    return this.shadowRoot?.getElementById('pager') as VetproviehPager;
   }
 
   /**
@@ -390,8 +389,7 @@ export class VetproviehBasicList extends VetproviehElement {
    * @return {HTMLElement}
    */
   public get listElementDiv(): HTMLElement {
-    return this.shadowRoot
-        .getElementById('listElements');
+    return this.shadowRoot?.getElementById('listElements') as HTMLElement;
   }
 
   /**

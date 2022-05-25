@@ -7,7 +7,7 @@ const LIST_PLACEHOLDER = '<p> Keine Daten zur Anzeige gefunden. </p>';
  */
 export class ListItemFactory {
   private _listItemDiv: HTMLElement;
-  private _template: DocumentFragment;
+  private _template: DocumentFragment | undefined;
   private _callbackSelected: (event: CustomEvent) => void;
 
   /**
@@ -18,7 +18,7 @@ export class ListItemFactory {
    */
   constructor(
       listItemDiv: HTMLElement,
-      template: DocumentFragment,
+      template: DocumentFragment | undefined,
       callbackSelected: (event: CustomEvent) => void) {
     this._listItemDiv = listItemDiv;
     this._template = template;
@@ -97,7 +97,7 @@ export class ListItemFactory {
      */
   public append(dataElement: BaseModel): ListItem {
     const newListItem: ListItem = new ListItem(
-        this._template,
+        this._template || new DocumentFragment(),
         dataElement);
 
     this.addEventListeners(newListItem);

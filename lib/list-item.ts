@@ -31,9 +31,9 @@ export class ListItem extends HTMLElement {
 
   /**
    * Marking Element, when found
-   * @param {string} searchValue
+   * @param {string | undefined} searchValue
    */
-  public mark(searchValue: string) {
+  public mark(searchValue: string | undefined) {
     if (searchValue) {
       ViewHelper.markElement(this, searchValue);
     }

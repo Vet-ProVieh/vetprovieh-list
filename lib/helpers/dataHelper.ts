@@ -10,7 +10,7 @@ import {BaseRepository, IRepository, BaseModel,
  */
 export class DataHelper {
   // Repository for Operations
-  private _repository: IRepository<any>;
+  private _repository: IRepository<any> | undefined;
 
   /**
      * Executing search on repository
@@ -47,12 +47,16 @@ export class DataHelper {
       params: { [Identifier: string]: string },
       value: string | undefined = undefined
   ): Promise<any> {
-    return this.repository
-        .whereByParams(params)
-        .then((data) => BaseRepository
-            .search(
-                data,
-                value));
+    if (this.repository) {
+      return this.repository
+          .whereByParams(params)
+          .then((data) => BaseRepository
+              .search(
+                  data,
+                  value));
+    } else {
+      return [];
+    }
   }
 
 
@@ -75,18 +79,18 @@ export class DataHelper {
 
   /**
      * Get Repository
-     * @return {IRepository<BaseModel>}
+     * @return {IRepository<BaseModel> | undefined}
      */
-  public get repository(): IRepository<BaseModel> {
+  public get repository(): IRepository<BaseModel> | undefined {
     return this._repository;
   }
 
 
   /**
      * Set Repository
-     * @param {IRepository<BaseModel>} v
+     * @param {IRepository<BaseModel> | undefined} v
      */
-  public set repository(v: IRepository<BaseModel>) {
+  public set repository(v: IRepository<BaseModel> | undefined) {
     if (v !== this._repository) {
       this._repository = v;
     }
