@@ -69,8 +69,8 @@ describe('content', () => {
     test('should have items', (done) => {
         let list = generateList();
         setTimeout(() => {
-            let container = list.shadowRoot.getElementById("listElements");
-            done(container.children.length == 0);
+            let container = list.shadowRoot?.getElementById("listElements");
+            done(container?.children.length == 0);
         },200); 
     });
 });
