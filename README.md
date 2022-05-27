@@ -1,6 +1,7 @@
 # \<vetprovieh-list\>
 
-Listing Elements for different types of Templates. Featuring Bulma.css
+In this project the component vetprovieh-list for the Progressive-Web-App(PWA) of Vet:Provieh are stored.
+
 
 ```html
 <vetprovieh-list></vetprovieh-list>
