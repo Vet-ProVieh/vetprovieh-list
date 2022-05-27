@@ -55,7 +55,14 @@ describe('constructor', function () {
 });
 
 describe('objects',  () => {
-    test('should set src',  (done) => {
+    test('should find two objects', (done) => {
+        let list = generateList();
+        setTimeout(() => {
+            console.log(`${list.objects.length} == ${data.length}`)
+            done(list.objects.length == data.length);
+        },200);
+    });
+    test('should find one object',  (done) => {
         let list = generateList();
         list.search("Dagobert");
         setTimeout(() => {

@@ -173,6 +173,7 @@ export class VetproviehBasicList extends VetproviehElement {
     if (val !== this.pagesize) {
       this._pagesize = val;
       this._setMaxPage(this._objects.length);
+      this._filterObjects();
     }
   }
 

@@ -2,8 +2,6 @@ import {
   VetproviehElement,
   WebComponent} from '@vetprovieh/vetprovieh-shared';
 import {VetproviehBasicList} from './vetprovieh-basic-list';
-
-export {VetproviehPager} from '@vetprovieh/vetprovieh-pager';
 /**
  * List Element for Vet:Provieh
  * Reads Data from Webservice an shows it.
